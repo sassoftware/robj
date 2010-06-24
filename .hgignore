@@ -1,0 +1,15 @@
+# use glob syntax.
+syntax: glob
+
+.DS_Store
+*~
+*.bak
+*.orig
+*.pyc
+*.pyo
+*.bz2
+*.sw*
+
+test/.coverage/
+test/.times
+test/annotate/
