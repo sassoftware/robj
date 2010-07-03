@@ -16,7 +16,6 @@ Basic REST HTTP client implementation.
 
 import base64
 import urllib
-import httplib
 import urlparse
 
 class Client(object):
@@ -24,14 +23,10 @@ class Client(object):
     Basic REST HTTP client class.
     """
 
-    _HTTPConnection = httplib.HTTPConnection
-    _HTTPSConnection = httplib.HTTPSConnection
-
     def __init__(self, baseUri, headers=None):
         self._baseUri = baseUri
         self._headers = headers or dict()
 
-        self._conn = None
         self._user = None
         self._passwd = None
 
@@ -45,17 +40,6 @@ class Client(object):
             raise ValueError(self._scheme)
 
     @property
-    def _connection(self):
-        if self._conn:
-            return self._conn
-        if self.scheme == 'http':
-            cls = self.HTTPConnection
-        else:
-            cls = self.HTTPSConnection
-        self._conn = cls(self.hostport)
-        self._conn.connect()
-        return self._conn
-
     def _getHeaders(self, headers):
         hdrs = self.headers.copy()
         hdrs.update(headers or {})
@@ -63,13 +47,6 @@ class Client(object):
             userpass = base64.b64encode('%s:%s' % (self._user, self._passwd))
             hdrs['Authorization'] = 'Basic %s' % userpass
         return hdrs
-
-    def _request(self, method, uri, content=None, headers=None):
-        hdrs = self._getHeaders(headers)
-        path = urlparse.urljoin(self._path, uri)
-        self._connection.request(method, path, body=content, headers=hdrs)
-        response = self._connection.getresponse()
-        return response
 
     def do_GET(self, uri):
         return self._request('GET', uri)

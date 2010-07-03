@@ -33,3 +33,19 @@ class rObjError(Exception):
     def __repr__(self):
         params = ', '.join('%s=%r' % x for x in self._kwargs.iteritems())
         return '%s(%s)' % (self.__class__, params)
+
+
+class HTTPError(rObjError):
+    """
+    Generic HTTP layer error.
+    """
+
+
+class HTTPResponseTimeout(HTTPError):
+    """
+    Raised when request.wait is called with a timeout and that timeout has been
+    reached.
+    """
+
+    _params = []
+    _template = 'Timeout reached waiting for response'
