@@ -14,16 +14,22 @@
 Basic REST HTTP client implementation.
 """
 
+import os
 import base64
 import urllib
 import urlparse
+
+from robj.http.request import Request
+from robj.http.pool import ConnectionManager
 
 class Client(object):
     """
     Basic REST HTTP client class.
     """
 
-    def __init__(self, baseUri, headers=None):
+    def __init__(self, baseUri, headers=None, maxClients=None,
+        maxConnections=None):
+
         self._baseUri = baseUri
         self._headers = headers or dict()
 
@@ -39,14 +45,27 @@ class Client(object):
         if self._scheme not in ('http', 'https'):
             raise ValueError(self._scheme)
 
+        self._mgr = ConnectionManager(maxClients=maxClients,
+            maxConnections=maxConnections)
+
     @property
-    def _getHeaders(self, headers):
+    def _getHeaders(self, headers=None):
         hdrs = self.headers.copy()
         hdrs.update(headers or {})
         if self._user is not None and self._passwd is not None:
             userpass = base64.b64encode('%s:%s' % (self._user, self._passwd))
             hdrs['Authorization'] = 'Basic %s' % userpass
         return hdrs
+
+    def _request(self, method, uri, content=None):
+        path = os.path.join(self._path, uri)
+
+        req = Request(method, path, self._scheme, self._hostport,
+            content=content, headers=self._getHeaders())
+
+        self._mgr.request(req)
+
+        return req
 
     def do_GET(self, uri):
         return self._request('GET', uri)
