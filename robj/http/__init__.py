@@ -10,3 +10,4 @@
 # or fitness for a particular purpose. See the MIT License for full details.
 #
 
+from robj.http.client import Client as HTTPClient
