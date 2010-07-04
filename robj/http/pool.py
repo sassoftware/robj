@@ -104,7 +104,7 @@ class ConnectionManager(object):
         def addWorker():
             if len(self._workers) >= self._maxClients:
                 return
-            worker = self._workerClass(self._inq, self._maxConnections)
+            worker = self._workerClass(self._reqs, self._maxConnections)
             self._workers.append(worker)
             worker.start()
 
@@ -124,4 +124,4 @@ class ConnectionManager(object):
         """
 
         self._createWorker()
-        self._inq.put(req)
+        self._reqs.put(req)

@@ -48,9 +48,8 @@ class Client(object):
         self._mgr = ConnectionManager(maxClients=maxClients,
             maxConnections=maxConnections)
 
-    @property
     def _getHeaders(self, headers=None):
-        hdrs = self.headers.copy()
+        hdrs = self._headers.copy()
         hdrs.update(headers or {})
         if self._user is not None and self._passwd is not None:
             userpass = base64.b64encode('%s:%s' % (self._user, self._passwd))
@@ -58,6 +57,8 @@ class Client(object):
         return hdrs
 
     def _request(self, method, uri, content=None):
+        if uri.startswith('/'):
+            uri = uri[1:]
         path = os.path.join(self._path, uri)
 
         req = Request(method, path, self._scheme, self._hostport,

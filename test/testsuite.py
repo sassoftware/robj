@@ -25,7 +25,7 @@ EXCLUDED_PATHS = ['scripts/.*', 'epdb.py', 'stackutil.py', 'test/.*']
 def setup():
     xobjPath = pathManager.addExecPath('XOBJ_PATH')
     robjPath = pathManager.addExecPath('ROBJ_PATH')
-    pathManager.addResourcePath('TEST_PATH', xobjPath + '/test')
+    pathManager.addResourcePath('TEST_PATH', robjPath + '/test')
 
 
 def main(argv=None, individual=True):

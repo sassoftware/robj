@@ -10,6 +10,6 @@
 # or fitness for a particular purpose. See the MIT License for full details.
 #
 
-from robj.robj import rObj
+#from robj.robj import rObj
 
-open = rObj.open
+#open = rObj.open
