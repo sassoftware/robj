@@ -45,6 +45,14 @@ def main(argv=None, individual=True):
     return results.getExitCode()
 
 
+class TestCase(testhelp.TestCase):
+    def setUp(self):
+        testhelp.TestCase.setUp(self)
+
+        from robj.lib import log
+        log.setupLogging()
+
+
 if __name__ == '__main__':
     setup()
     sys.exit(main(sys.argv, individual=False))

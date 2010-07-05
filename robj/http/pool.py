@@ -15,10 +15,13 @@ Classes for manging pool of http clients.
 """
 
 import time
+import logging
 from Queue import Queue
 from threading import Thread
 
 from robj.http.connection import Connection
+
+log = logging.getLogger('robj.http.pool')
 
 class ClientWorker(Thread):
     """
@@ -55,6 +58,8 @@ class ClientWorker(Thread):
         """
 
         while True:
+            log.info('%s: processing request' % self.name)
+
             # Get the next available request.
             req = self._inq.get()
             self._busy = True

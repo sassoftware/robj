@@ -18,6 +18,22 @@ import time
 
 from robj.errors import HTTPResponseTimeout
 
+class Response(object):
+    """
+    Simple HTTP Response wrapper class.
+    """
+
+    def __init__(self, resp):
+        self._doc = ''
+        self.status = resp.status
+        self.reason = resp.reason
+        self.length = resp.length
+        self._doc = resp.read()
+
+    def read(self):
+        return self._doc
+
+
 class Request(object):
     """
     Simple HTTP Request class.
@@ -34,7 +50,7 @@ class Request(object):
         self._scheme = scheme
         self._hostport = hostport
 
-        self._response = None
+        self.response = None
 
     def __hash__(self):
         return hash(self.key)
@@ -50,10 +66,14 @@ class Request(object):
 
     @property
     def completed(self):
-        return self._response is not None
+        return self.response is not None
+
+    @property
+    def resp(self):
+        return self.response
 
     def setResponse(self, resp):
-        self._response = resp
+        self.response = Response(resp)
 
     def wait(self, timeout=None):
         spent = 0
