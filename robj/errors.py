@@ -49,3 +49,20 @@ class HTTPResponseTimeout(HTTPError):
 
     _params = []
     _template = 'Timeout reached waiting for response'
+
+
+class GlueError(rObjError):
+    """
+    Generic glue layer error.
+    """
+
+
+class ExternalUriError(GlueError):
+    """
+    Raised when a uri is accessed that is at a different base than the original 
+    uri.
+    """
+
+    _params = ['uri', 'base', ]
+    _template = ('Can not access %(uri)s since it is not under the base uri '
+        '%(base)s')

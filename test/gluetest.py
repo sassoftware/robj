@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 # Copyright (c) 2010 rPath, Inc.
 #
@@ -10,14 +11,19 @@
 # or fitness for a particular purpose. See the MIT License for full details.
 #
 
-from robj.glue import HTTPClient as _HTTPClient
+import testsuite
+testsuite.setup()
 
-__ALL__ = ['rObj', 'connect', 'open', ]
+from robj.glue import HTTPClient
 
-def rObj(uri, headers=None, maxClients=None, maxConnections=None):
-    client = _HTTPClient(uri, headers=headers, maxClients=maxClients,
-        maxConnections=maxConnections)
-    robj = client.do_GET('/')
-    return robj
+class ClientTest(testsuite.TestCase):
+    def setUp(self):
+        testsuite.TestCase.setUp(self)
+        self._client = HTTPClient('http://www.rpath.org/api/')
 
-connect = open = rObj
+    def testGET(self):
+        robj = self._client.do_GET('/')
+
+        import epdb; epdb.st()
+
+
