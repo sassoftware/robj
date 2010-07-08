@@ -35,6 +35,23 @@ class rObjError(Exception):
         return '%s(%s)' % (self.__class__, params)
 
 
+class ObjError(rObjError):
+    """
+    Generic Object layer error.
+    """
+
+
+class RemoteInstanceOverwriteError(ObjError, AttributeError):
+    """
+    Raised when someone tries to set an attribute that has already been set
+    that has an id attribute.
+    """
+
+    _params = ['uri', 'id', 'name', ]
+    _templates = ('Can not override an attribute, %(name)s, of %(uri)s that is '
+        'represented by an instance on the server at %(id)s.')
+
+
 class HTTPError(rObjError):
     """
     Generic HTTP layer error.
@@ -49,6 +66,15 @@ class HTTPResponseTimeout(HTTPError):
 
     _params = []
     _template = 'Timeout reached waiting for response'
+
+
+class HTTPDeleteError(HTTPError):
+    """
+    Raised when an unexpected status is returned from a DELETE request.
+    """
+
+    _params = ['status', 'reason', 'resp', ]
+    _template = 'Deleting %(uri)s failed with %(reason)s [%(status)s]'
 
 
 class GlueError(rObjError):

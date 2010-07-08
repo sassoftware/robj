@@ -21,14 +21,21 @@ from threading import RLock
 from xobj import xobj
 
 from robj.obj import rObj
+from robj.errors import HTTPDeleteError
 from robj.errors import ExternalUriError
 from robj.http import HTTPClient as _HTTPClient
 
-def cache(func):
+def update_cache(func):
     def wrapper(self, *args, **kwargs):
+        parent = kwargs.pop('parent', None)
         resp = func(self, *args, **kwargs)
         uri = args[0]
-        robj = self._instCache.cache(self, uri, resp)
+
+        if func.__name__ == 'do_DELETE':
+            self._instCache.clear(uri)
+            return resp
+
+        robj = self._instCache.cache(self, uri, resp, parent=parent)
         return robj
     return wrapper
 
@@ -67,7 +74,7 @@ class HTTPClient(object):
 
         return uri
 
-    @cache
+    @update_cache
     def do_POST(self, uri, xdoc):
         xml = xobj.toxml(xdoc)
 
@@ -81,7 +88,7 @@ class HTTPClient(object):
         req.resp.doc = doc
         return req.resp
 
-    @cache
+    @update_cache
     def do_PUT(self, uri, xdoc):
         xml = xobj.toxml(xdoc)
 
@@ -95,7 +102,7 @@ class HTTPClient(object):
         req.resp.doc = doc
         return req.resp
 
-    @cache
+    @update_cache
     def do_GET(self, uri):
         uri = self._resolve(uri)
         req = self._client.do_GET(uri)
@@ -107,13 +114,19 @@ class HTTPClient(object):
         req.resp.doc = doc
         return req.resp
 
-    @cache
+    @update_cache
     def do_DELETE(self, uri):
         uri = self._resolve(uri)
         req = self._client.do_DELETE(uri)
         req.wait()
 
         req.resp.doc = None
+
+        # Raise an error if the instance was not already deleted.
+        if req.resp.status not in (404, 200):
+            raise HTTPDeleteError(uri=self._uri, status=req.resp.status,
+                                  reason=req.resp.reason, resp=req.resp)
+
         return req.resp
 
 
@@ -126,18 +139,21 @@ class InstanceCache(dict):
         dict.__init__(self)
         self._writeLock = RLock()
 
-    def clear(self):
+    def clear(self, uri=None):
         """
         Clear the cache of rObj instances. This will result in orphaned
         instances in memory.
         """
 
         self._writeLock.acquire()
-        for element in self:
-            self.pop(element)
+        if uri:
+            self.pop(uri, None)
+        else:
+            for element in self:
+                self.pop(element)
         self._writeLock.release()
 
-    def cache(self, client, uri, resp):
+    def cache(self, client, uri, resp, parent=None):
         """
         Cache the given robj if needed.
         """
@@ -149,7 +165,7 @@ class InstanceCache(dict):
             if not robj._dirty:
                 robj._doc = resp.doc
         else:
-            robj = rObj(uri, client, doc=resp.doc)
+            robj = rObj(uri, client, resp.doc, parent=parent)
             self[uri] = robj
 
         self._writeLock.release()
