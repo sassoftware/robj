@@ -16,6 +16,7 @@ Classes for manging pool of http clients.
 
 import time
 import logging
+import httplib
 from Queue import Queue
 from threading import Thread
 
@@ -30,8 +31,8 @@ class ClientWorker(Thread):
 
     _connectionClass = Connection
 
-    def __init__(self, inq, maxConnections):
-        Thread.__init__(self)
+    def __init__(self, inq, maxConnections, *args, **kwargs):
+        Thread.__init__(self, *args, **kwargs)
         self._inq = inq
         self._maxConnections = maxConnections
 
@@ -73,12 +74,19 @@ class ClientWorker(Thread):
                 self._inq.put(req)
 
             # Handle the request.
-            conn.request(req)
+            try:
+                conn.request(req)
+            except httplib.BadStatusLine:
+                if req.retry():
+                    log.info('retrying')
+                    self._inq.put(req)
+                else:
+                    raise httplib.BadStatusLine
 
             self._busy = False
 
             # Wait a second before handling the next request.
-            time.sleep(1)
+            time.sleep(0.1)
 
 
 class ConnectionManager(object):
@@ -88,7 +96,7 @@ class ConnectionManager(object):
 
     _workerClass = ClientWorker
 
-    def __init__(self, maxClients=None, maxConnections=None):
+    def __init__(self, maxClients=None, maxConnections=None, threading=True):
         if maxClients is None:
             maxClients = 10
         if maxConnections is None:
@@ -96,6 +104,7 @@ class ConnectionManager(object):
 
         self._maxClients = maxClients
         self._maxConnections = maxConnections
+        self._threading = threading
 
         self._reqs = Queue()
 
@@ -109,9 +118,12 @@ class ConnectionManager(object):
         def addWorker():
             if len(self._workers) >= self._maxClients:
                 return
-            worker = self._workerClass(self._reqs, self._maxConnections)
+            name = 'client-%s' % (len(self._workers) + 1)
+            worker = self._workerClass(self._reqs, self._maxConnections,
+                name=name)
             self._workers.append(worker)
-            worker.start()
+            if self._threading:
+                worker.start()
 
         # If there are already workers, look for an available worker.
         if self._workers:
@@ -130,3 +142,7 @@ class ConnectionManager(object):
 
         self._createWorker()
         self._reqs.put(req)
+
+        if not self._threading:
+            worker = self._workers[0]
+            worker.run()

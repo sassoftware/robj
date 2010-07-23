@@ -17,6 +17,9 @@ Module for implementing rObj classes.
 import weakref
 from threading import RLock
 
+from xobj import xobj
+
+from robj.errors import ExternalUriError
 from robj.errors import RemoteInstanceOverwriteError
 
 def require_collection(func):
@@ -29,42 +32,60 @@ def require_collection(func):
 
 class rObj(object):
     """
-    Base rObj class.
+    rObj object wrapper class.
     """
 
     __slots__ = ('_uri', '_client', '_doc', '_parent', '_tag', '_isCollection',
-        '_dirty', '_dl')
+        '_dirty', '_dl', '_childTag', )
 
     def __init__(self, uri, client, doc, parent=None):
         self._uri = uri
         self._client = client
         self._doc = doc
-        if parent:
-            self._parent = weakref.ref(parent)
+        if parent is not None:
+            #self._parent = weakref.ref(parent)
+            self._parent = parent
         else:
             self._parent = None
 
-        if self._doc:
-            assert len(self._doc._xobj.elements) == 1
-            self._tag = self._doc._xobj.elements[0]
+        if self._doc is not None:
+            if self._parent and self._parent.isCollection:
+                self._tag = self._parent.childTag
+            else:
+                assert len(self._doc._xobj.elements) == 1
+                self._tag = self._doc._xobj.elements[0]
         else:
             self._tag = None
 
         self._dl = RLock()
-        if isinstance(self._root, list):
+
+        self._childTag = ''
+        self._isCollection = False
+        if self._tag and self._tag.endswith('s'):
+            root = getattr(self._doc, self._tag)
+            elements = root._xobj.elements
+            if (len(elements) == 1 and self._tag[:-1] in elements):
+                element = getattr(root, self._tag[:-1])
+                if not isinstance(element, list):
+                    setattr(root, self._tag[:-1], [element, ])
+                self._childTag = self._tag[:-1]
+                self._isCollection = True
+        elif isinstance(getattr(self._doc, self._tag, None), list):
             self._isCollection = True
-        else:
-            self._isCollection = False
 
         self._dirty = False
 
     @property
     def _root(self):
         self._dl.acquire()
-        doc = object.__getattr__(self, '_doc')
-        tag = object.__getattr__(self, '_tag')
-        root = getattr(doc, tag)
-        self._dl.release()
+        if (self._parent and self._parent.isCollection and
+            not isinstance(self._doc, xobj.Document)):
+            root = self._doc
+        else:
+            root = getattr(self._doc, self._tag)
+            if self._isCollection and self._childTag:
+                root = getattr(root, self._childTag)
+            self._dl.release()
         return root
 
     @property
@@ -75,12 +96,39 @@ class rObj(object):
     def parent(self):
         return self._parent
 
-    def _getObj(self, value):
+    @property
+    def childTag(self):
+        return self._childTag
+
+    @property
+    def elements(self):
+        return self._root._xobj.elements
+
+    def __repr__(self):
+        return '<robj.rObj(%s)>' % self._tag
+
+    def _getObj(self, name, value):
+        # Wrap this instance with an rObj.
         if hasattr(value, 'id'):
-            return self.__class__(value.id, self._client, value, parent=self)
+            # Wrap the xobj in an xobj document so that it can be serialized
+            # later.
+            if isinstance(value, xobj.XObj):
+                doc = xobj.Document()
+                doc._xobj.elements.append(name)
+                setattr(doc, name, value)
+            return self.__class__(value.id, self._client, doc, parent=self)
+
+        # Get the instance pointed to by the href.
         elif hasattr(value, 'href'):
-            obj = self._client.do_GET(value.href, parent=self)
+            try:
+                obj = self._client.do_GET(value.href, parent=self)
+            except ExternalUriError:
+                return value.href
             return obj
+
+        # Wrap anything that has elements in an rObj.
+        elif hasattr(value, '_xobj') and value._xobj.elements:
+            return self.__class__(self._uri, self._client, value, parent=self)
 
         return None
 
@@ -95,42 +143,37 @@ class rObj(object):
         return True
 
     def __getattr__(self, name):
-        try:
-            return object.__getattr__(self, name)
-        except AttributeError:
-            try:
-                return getattr(self.__class__, name)
-            except AttributeError:
-                import epdb; epdb.st()
-                val = getattr(self._root, name)
-                obj = self._getObj(val)
-                if obj:
-                    return obj
-                else:
-                    return val
+        if not name.startswith('_'):
+            val = getattr(self._root, name)
+            obj = self._getObj(name, val)
+            if obj:
+                return obj
+            else:
+                return val
+        else:
+            return object.__getattribute__(self, name)
 
     def __setattr__(self, name, value):
-        if name.startswith('_'):
-            object.__setattr__(self, name, value)
-            return
-
-        self._dl.acquire()
-        if hasattr(self._root, name):
-            val = getattr(self._root, name)
-            if not self._setObj(val, name, value):
+        if not name.startswith('_'):
+            self._dl.acquire()
+            if hasattr(self._root, name):
+                val = getattr(self._root, name)
+                if not self._setObj(val, name, value):
+                    self._dirty = True
+                    setattr(self._root, name, value)
+            else:
                 self._dirty = True
                 setattr(self._root, name, value)
+            self._dl.release()
         else:
-            self._dirty = True
-            setattr(self._root, name, value)
-        self._dl.release()
+            object.__setattr__(self, name, value)
 
     @require_collection
     def __getitem__(self, idx):
         assert isinstance(idx, int), 'index is required to be an interger'
 
         val = self._root[idx]
-        obj = self._getObj(val)
+        obj = self._getObj(self._childTag, val)
         if obj:
             return obj
         else:
@@ -170,6 +213,15 @@ class rObj(object):
         for i in range(len(self._root)):
             yield self[i]
         self._dl.release()
+
+    def __len__(self):
+        if self._isCollection:
+            self._dl.acquire()
+            l = len(self._root)
+            self._dl.release()
+            return l
+        else:
+            return True
 
     @require_collection
     def append(self, value):

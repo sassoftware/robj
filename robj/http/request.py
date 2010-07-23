@@ -50,6 +50,8 @@ class Request(object):
         self._scheme = scheme
         self._hostport = hostport
 
+        self._retry = 10
+
         self.response = None
 
     def __hash__(self):
@@ -71,6 +73,10 @@ class Request(object):
     @property
     def resp(self):
         return self.response
+
+    def retry(self):
+        self._retry -= 1
+        return self._retry
 
     def setResponse(self, resp):
         self.response = Response(resp)

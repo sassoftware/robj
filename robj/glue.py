@@ -27,9 +27,13 @@ from robj.http import HTTPClient as _HTTPClient
 
 def update_cache(func):
     def wrapper(self, *args, **kwargs):
-        parent = kwargs.pop('parent', None)
-        resp = func(self, *args, **kwargs)
         uri = args[0]
+        parent = kwargs.pop('parent', None)
+
+        if func.__name__ == 'do_GET' and uri in self._instCache:
+            return self._instCache[uri]
+
+        resp = func(self, *args, **kwargs)
 
         if func.__name__ == 'do_DELETE':
             self._instCache.clear(uri)
@@ -66,7 +70,7 @@ class HTTPClient(object):
         if uri.startswith('http'):
             scheme, loc, path, _, _ = urlparse.urlsplit(self._baseUri)
             userpass, hostport = urllib.splituser(loc)
-            base = urlparse.urlunsplit((scheme, loc, path, None, None))
+            base = urlparse.urlunsplit((scheme, hostport, path, None, None))
             if uri.startswith(base):
                 return uri[len(base)-1:]
             else:

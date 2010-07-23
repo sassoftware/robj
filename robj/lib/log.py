@@ -65,12 +65,12 @@ def setupLogging(logFile=None):
     connHandlers = _setupHandlers(logFile=connLogFile,
                                   prefix='robj-connections-')
 
-    connLog = logging.getLogger('robj.http.traffic')
-    for handler in connLog.handlers:
-        connLog.removeHandler(handler)
-    for handler in connHandlers:
-        connLog.addHandler(handler)
-    connLog.setLevel(logging.DEBUG)
+    #connLog = logging.getLogger('robj.http.traffic')
+    #for handler in connLog.handlers:
+    #    connLog.removeHandler(handler)
+    #for handler in connHandlers:
+    #    connLog.addHandler(handler)
+    #connLog.setLevel(logging.DEBUG)
 
     # Delete conary's log handler since it puts things on stderr and without
     # any timestamps.

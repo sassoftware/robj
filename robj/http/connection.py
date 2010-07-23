@@ -63,6 +63,8 @@ class Connection(object):
         self._conn = cls(self._hostport)
         self._conn.connect()
 
+        #self._conn.set_debuglevel(1)
+
         log.info('connected to %s://%s' % (self._scheme, self._hostport))
 
         return self._conn
