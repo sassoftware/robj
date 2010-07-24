@@ -24,7 +24,6 @@ class Response(object):
     """
 
     def __init__(self, resp):
-        self._doc = ''
         self.status = resp.status
         self.reason = resp.reason
         self.length = resp.length
@@ -83,8 +82,9 @@ class Request(object):
 
     def wait(self, timeout=None):
         spent = 0
+        delta = 0.1
         while not self.completed:
-            time.sleep(1)
-            spent += 1
+            time.sleep(delta)
+            spent += delta
             if timeout and timeout <= spent:
                 raise HTTPResponseTimeout
