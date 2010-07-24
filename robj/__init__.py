@@ -11,13 +11,25 @@
 #
 
 from robj.glue import HTTPClient as _HTTPClient
+from robj.lib.log import setupLogging as _setupLogging
 
 __ALL__ = ['rObj', 'connect', 'open', ]
 
-def rObj(uri, headers=None, maxClients=None, maxConnections=None):
+def rObj(uri, headers=None, maxClients=None, maxConnections=None,
+    logging=True):
+
+    # Setup logging if requested.
+    if logging:
+        # FIXME: Let people specify log files somehow.
+        _setupLogging()
+
+    # Instantiate the http client.
     client = _HTTPClient(uri, headers=headers, maxClients=maxClients,
         maxConnections=maxConnections)
+
+    # Get the root rObj
     robj = client.do_GET('/')
+
     return robj
 
 connect = open = rObj
