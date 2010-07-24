@@ -55,38 +55,45 @@ class ClientWorker(Thread):
 
     def run(self):
         """
-        Process client requests.
+        Process client requests forever.
         """
 
         while True:
-            log.info('%s: processing request' % self.name)
+            self.work()
 
-            # Get the next available request.
-            req = self._inq.get()
-            self._busy = True
+    def work(self):
+        """
+        Process one client request.
+        """
 
-            # Get a connection for the request.
-            conn = self._getConn(req)
+        # Get the next available request.
+        req = self._inq.get()
+        self._busy = True
 
-            # If the connection limit has been hit and we don't have a
-            # connection for the request, put it back on the request queue.
-            if conn is None:
+        log.info('%s: processing request' % self.name)
+
+        # Get a connection for the request.
+        conn = self._getConn(req)
+
+        # If the connection limit has been hit and we don't have a
+        # connection for the request, put it back on the request queue.
+        if conn is None:
+            self._inq.put(req)
+
+        # Handle the request.
+        try:
+            conn.request(req)
+        except httplib.BadStatusLine:
+            if req.retry():
+                log.info('retrying')
                 self._inq.put(req)
+            else:
+                raise httplib.BadStatusLine
 
-            # Handle the request.
-            try:
-                conn.request(req)
-            except httplib.BadStatusLine:
-                if req.retry():
-                    log.info('retrying')
-                    self._inq.put(req)
-                else:
-                    raise httplib.BadStatusLine
+        self._busy = False
 
-            self._busy = False
-
-            # Wait a second before handling the next request.
-            time.sleep(0.1)
+        # Wait a second before handling the next request.
+        time.sleep(0.1)
 
 
 class ConnectionManager(object):
@@ -145,4 +152,4 @@ class ConnectionManager(object):
 
         if not self._threading:
             worker = self._workers[0]
-            worker.run()
+            worker.work()
