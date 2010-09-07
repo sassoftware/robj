@@ -19,11 +19,12 @@ from robj.http import HTTPClient
 class HTTPClientTest(testsuite.TestCase):
     def setUp(self):
         testsuite.TestCase.setUp(self)
-        self._client = HTTPClient('http://www.rpath.org/api/')
+
+        self._client = HTTPClient(self.server.geturi('/api/'), maxClients=1)
 
     def testGET(self):
-        #req = self._client.do_GET('/')
-        #req.wait()
+        req = self._client.do_GET('/')
+        req.wait()
 
         reqs = []
         for i in range(10):
@@ -32,3 +33,8 @@ class HTTPClientTest(testsuite.TestCase):
         for req in reqs:
             req.wait()
 
+    def testGETError(self):
+        req = self._client.do_GET('/foobar')
+        req.wait()
+
+        self.failUnlessEqual(req.resp.status, 404)
