@@ -136,3 +136,6 @@ if __name__ == '__main__':
     sys.excepthook = util.genExcepthook()
 
     StartServer(fork=False)
+
+    #server = ThreadServer()
+    #import epdb; epdb.st()
