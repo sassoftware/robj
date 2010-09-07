@@ -15,6 +15,7 @@ from threading import Thread
 from BaseHTTPServer import HTTPServer
 from BaseHTTPServer import BaseHTTPRequestHandler
 
+from testserver import models
 from testserver.datastore import DataStore
 from testserver.controllers import controllers
 
@@ -26,8 +27,16 @@ class RESTServer(HTTPServer):
     def __init__(self, *args, **kwargs):
         HTTPServer.__init__(self, *args, **kwargs)
 
+        self.models = models
         self.data = DataStore()
         self.controllers = controllers
+
+    @property
+    def port(self):
+        return self.server_address[1]
+
+    def geturi(self, path=''):
+        return 'http://localhost:%s%s' % (self.port, path)
 
 
 class RESTRequestHandler(BaseHTTPRequestHandler):
