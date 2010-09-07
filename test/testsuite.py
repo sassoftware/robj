@@ -52,6 +52,13 @@ class TestCase(testhelp.TestCase):
         from robj.lib import log
         log.setupLogging()
 
+        import testserver
+        ports = testhelp.findPorts(num=1, closeSockets=True)
+        self.server = testserver.ThreadServer(port=ports[0])
+
+    def tearDown(self):
+        self.server.shutdown()
+
 
 if __name__ == '__main__':
     setup()
