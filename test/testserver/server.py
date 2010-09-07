@@ -11,7 +11,7 @@
 #
 
 import os
-
+from threading import Thread
 from BaseHTTPServer import HTTPServer
 from BaseHTTPServer import BaseHTTPRequestHandler
 
@@ -105,6 +105,29 @@ def StartServer(port=8080, fork=True, handlerClass=RESTRequestHandler,
     else:
         server.serve_forever()
 
+
+def ThreadServer(port=8080, handlerClass=RESTRequestHandler,
+    serverClass=RESTServer):
+
+    class Server(Thread, serverClass):
+        def __init__(self, server_address, handlerClass):
+            Thread.__init__(self)
+            serverClass.__init__(self, server_address, handlerClass)
+
+            self.daemon = True
+
+        def run(self):
+            self.serve_forever()
+
+    server_address = ('', port)
+    server = Server(server_address, handlerClass)
+
+    sn = server.socket.getsockname()
+    print 'starting server on %s port %s' % (sn[0], sn[1])
+
+    server.start()
+
+    return server
 
 if __name__ == '__main__':
     import sys
