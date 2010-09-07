@@ -14,7 +14,6 @@
 Module for implementing rObj classes.
 """
 
-import weakref
 from threading import RLock
 
 from xobj import xobj
