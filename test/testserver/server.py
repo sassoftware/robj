@@ -70,7 +70,6 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
             self.wfile.close()
 
         except Exception, e:
-            raise
             self.log_exception(e)
             self.send_error(500, 'Internal server error: (%s)' % e)
 
