@@ -23,9 +23,9 @@ log = logging.getLogger('robj.http.connection')
 class Connection(object):
     """
     Generic HTTP connection class.
-    @param scheme: uri scheme, supports http or https.
+    @param scheme: URI scheme, supports http or https.
     @type scheme: str
-    @param hostport: host and possibly port part of uri.
+    @param hostport: Host and possibly port part of URI. (ex. localhost:8000)
     @type hostport str
     """
 
@@ -62,7 +62,6 @@ class Connection(object):
 
         self._conn = cls(self._hostport)
         self._conn.connect()
-
         #self._conn.set_debuglevel(1)
 
         log.info('connected to %s://%s' % (self._scheme, self._hostport))
@@ -86,7 +85,5 @@ class Connection(object):
         @type req: robj.http.request.Request
         """
 
-        resp = self._request(req.method, req.path, content=req.content,
+        req.response = self._request(req.method, req.path, content=req.content,
             headers=req.headers)
-
-        req.setResponse(resp)

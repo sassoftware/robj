@@ -24,6 +24,20 @@ from robj.http.dispatcher import RequestDispatcher
 class Client(object):
     """
     Basic REST HTTP client class.
+    @param baseUri: URI for connectiong to the root of the desired web service.
+                    This may contain user information and must be http or https.
+    @type baseUri: str
+    @param headers: Any heads that should be included in all requets.
+    @type headers: dict
+    @param maxClients: The maximum number of workers that will be created to
+                       handle requets. Works are created as needed, rather than
+                       being preallocated. (default: 10)
+    @type maxClients: int
+    @param maxConnections: The maximum number of connections each client thread
+                           should cache. Client threads only cache one
+                           connection per host. This should only matter if you
+                           are talking to multiple hosts. (default: 2)
+    @type maxConnections: int
     """
 
     def __init__(self, baseUri, headers=None, maxClients=None,
@@ -44,7 +58,7 @@ class Client(object):
         if self._scheme not in ('http', 'https'):
             raise ValueError(self._scheme)
 
-        self._mgr = RequestDispatcher(maxClients=maxClients,
+        self._dispatcher = RequestDispatcher(maxClients=maxClients,
             maxConnections=maxConnections)
 
     def _getHeaders(self, headers=None):
@@ -62,7 +76,7 @@ class Client(object):
         req = Request(method, path, self._scheme, self._hostport,
             content=content, headers=self._getHeaders())
 
-        self._mgr.request(req)
+        self._dispatcher.request(req)
 
         return req
 

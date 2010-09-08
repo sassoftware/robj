@@ -51,7 +51,7 @@ class Request(object):
 
         self._retry = 10
 
-        self.response = None
+        self._response = None
 
     def __hash__(self):
         return hash(self.key)
@@ -70,15 +70,17 @@ class Request(object):
         return self.response is not None
 
     @property
-    def resp(self):
-        return self.response
-
     def retry(self):
-        self._retry -= 1
-        return self._retry
+        if self._retry > 0:
+            self._retry -= 1
+        return bool(self._retry)
 
-    def setResponse(self, resp):
-        self.response = Response(resp)
+    def _set_response(self, resp):
+        if self._response is None:
+            self._response = Response(resp)
+    def _get_response(self):
+        return self._response
+    response = property(_set_response, _get_response)
 
     def wait(self, timeout=None):
         spent = 0
