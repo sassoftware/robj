@@ -22,7 +22,25 @@ class ClientTest(testsuite.TestCase):
         self._client = HTTPClient('http://www.rpath.org/api/')
 
     def testGET(self):
-        robj = self._client.do_GET('/')
+        api = self._client.do_GET('/')
+        prodMap = dict([ (x.hostname, x) for x in api.products ])
+        buildme = prodMap['buildme']
+        versions = buildme.versions
+
+        imageTypeDefs = {}
+        for version in buildme.versions:
+            for imgDef in version.imageTypeDefinitions:
+                imageTypeDefs.setdefault(version.name, set()).add(imgDef.name)
+
+        images = versions[0].images
+
+        img1 = images[0]
+        files = img1.files
+
+        for f in files:
+            print 80 * '='
+            for e in f.elements:
+                print '%s: %s' % (e, getattr(f, e))
 
         import epdb; epdb.st()
 
