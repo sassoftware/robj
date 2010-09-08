@@ -14,13 +14,12 @@
 Basic REST HTTP client implementation.
 """
 
-import os
 import base64
 import urllib
 import urlparse
 
 from robj.http.request import Request
-from robj.http.pool import ConnectionManager
+from robj.http.dispatcher import RequestDispatcher
 
 class Client(object):
     """
@@ -45,7 +44,7 @@ class Client(object):
         if self._scheme not in ('http', 'https'):
             raise ValueError(self._scheme)
 
-        self._mgr = ConnectionManager(maxClients=maxClients,
+        self._mgr = RequestDispatcher(maxClients=maxClients,
             maxConnections=maxConnections)
 
     def _getHeaders(self, headers=None):
@@ -57,9 +56,8 @@ class Client(object):
         return hdrs
 
     def _request(self, method, uri, content=None):
-        if uri.startswith('/'):
-            uri = uri[1:]
-        path = os.path.join(self._path, uri)
+        uri = uri.lstrip('/')
+        path = '/'.join(self._path, uri)
 
         req = Request(method, path, self._scheme, self._hostport,
             content=content, headers=self._getHeaders())

@@ -24,7 +24,7 @@ from robj.http.connection import Connection
 
 log = logging.getLogger('robj.http.pool')
 
-class ClientWorker(Thread):
+class RequestWorker(Thread):
     """
     Threaded HTTP client class.
     """
@@ -96,12 +96,12 @@ class ClientWorker(Thread):
         time.sleep(0.1)
 
 
-class ConnectionManager(object):
+class RequestDispatcher(object):
     """
     Class for managing a pool of client workers.
     """
 
-    _workerClass = ClientWorker
+    _workerClass = RequestWorker
 
     def __init__(self, maxClients=None, maxConnections=None, threading=True):
         if maxClients is None:
