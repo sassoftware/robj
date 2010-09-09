@@ -59,6 +59,8 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
             # get the first available controller
             ControllerClass, pathVars = self.server.controllers.get(self.path)
 
+            self.log_message('serving controller: %s' % ControllerClass.__name__)
+
             controller = ControllerClass(self.server.data, self,
                 pathVars=pathVars)
 

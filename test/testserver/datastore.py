@@ -77,10 +77,10 @@ class Employees(AbstractModelCollection):
 
     def update(self, idx, xml):
         newModel = self.parse(xml)
-        oldModel = self.idx
+        oldModel = self[idx]
 
         immutable = ('employid', 'id')
-        for attr in models.Employee._xobj.elements:
+        for attr in models.Employee.__elements__:
             if attr in immutable:
                 continue
 
@@ -124,10 +124,10 @@ class Products(AbstractModelCollection):
 
     def update(self, idx, xml):
         newModel = self.parse(xml)
-        oldModel = self.idx
+        oldModel = self[idx]
 
         immutable = ('productid', 'id')
-        for attr in models.Product._xobj.elements:
+        for attr in models.Product.__elements__:
             if attr in immutable:
                 continue
 
