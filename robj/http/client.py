@@ -43,23 +43,30 @@ class Client(object):
     def __init__(self, baseUri, headers=None, maxClients=None,
         maxConnections=None):
 
-        self._baseUri = baseUri
         self._headers = headers or dict()
 
         self._user = None
         self._passwd = None
 
-        self._scheme, loc, self._path, _, _ = urlparse.urlsplit(self._baseUri)
+        baseUri = baseUri.rstrip('/')
+        self._scheme, loc, self._path, _, _ = urlparse.urlsplit(baseUri)
 
         userpass, self._hostport = urllib.splituser(loc)
         if userpass:
             self._user, self._passwd = urllib.splitpasswd(userpass)
+
+        self._baseUri = urlparse.urlunsplit((self._scheme, self._hostport,
+            self._path, None, None))
 
         if self._scheme not in ('http', 'https'):
             raise ValueError(self._scheme)
 
         self._dispatcher = RequestDispatcher(maxClients=maxClients,
             maxConnections=maxConnections)
+
+    @property
+    def baseURI(self):
+        return self._baseUri
 
     def _getHeaders(self, headers=None):
         hdrs = self._headers.copy()
