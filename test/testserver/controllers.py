@@ -15,7 +15,7 @@ from SimpleHTTPServer import SimpleHTTPRequestHandler
 from xobj import xobj
 
 from testserver import models
-from testserver.modelmgr import AttrDict
+from testserver.datastore import AttrDict
 
 class Response(object):
     def __init__(self, doc=None, code=200, model=None, tag=None):
