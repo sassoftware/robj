@@ -75,12 +75,12 @@ class Request(object):
             self._retry -= 1
         return bool(self._retry)
 
+    def _get_response(self):
+        return self._response
     def _set_response(self, resp):
         if self._response is None:
             self._response = Response(resp)
-    def _get_response(self):
-        return self._response
-    response = property(_set_response, _get_response)
+    response = property(_get_response, _set_response)
 
     def wait(self, timeout=None):
         spent = 0

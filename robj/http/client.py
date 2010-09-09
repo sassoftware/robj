@@ -78,7 +78,7 @@ class Client(object):
 
     def _request(self, method, uri, content=None):
         uri = uri.lstrip('/')
-        path = '/'.join(self._path, uri)
+        path = '/'.join((self._path, uri))
 
         req = Request(method, path, self._scheme, self._hostport,
             content=content, headers=self._getHeaders())

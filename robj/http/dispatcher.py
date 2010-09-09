@@ -90,7 +90,7 @@ class RequestWorker(Thread):
                 log.info('%s: retrying' % self.name)
                 return req
             else:
-                raise httplib.BadStatusLine
+                raise
 
         # Wait a tenth of a second before handling the next request.
         time.sleep(0.1)
@@ -113,6 +113,11 @@ class RequestDispatcher(object):
     _workerClass = RequestWorker
 
     def __init__(self, maxClients=10, maxConnections=2):
+        if maxClients is None:
+            maxClients = 10
+        if maxConnections is None:
+            maxConnections = 2
+
         self._maxClients = maxClients
         self._maxConnections = maxConnections
 

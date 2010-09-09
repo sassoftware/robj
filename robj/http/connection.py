@@ -69,8 +69,8 @@ class Connection(object):
         return self._conn
 
     def _request(self, method, path, content=None, headers=None):
-        #clog.info('CONNECTION(%s) SCHEME(%s) HOSTPORT(%s) METHOD(%s) PATH(%s)' %
-        #    (id(self), self._scheme, self._hostport, method, path))
+        clog.info('CONNECTION(%s) SCHEME(%s) HOSTPORT(%s) METHOD(%s) PATH(%s)' %
+            (id(self), self._scheme, self._hostport, method, path))
         #clog.debug('CONNECTION(%s) CONTENT %s' % (id(self), content))
         #clog.debug('CONNECTION(%s) HEADERS %s' % (id(self), headers))
 
