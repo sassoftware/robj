@@ -25,7 +25,10 @@ EXCLUDED_PATHS = ['scripts/.*', 'epdb.py', 'stackutil.py', 'test/.*']
 def setup():
     xobjPath = pathManager.addExecPath('XOBJ_PATH')
     robjPath = pathManager.addExecPath('ROBJ_PATH')
-    pathManager.addResourcePath('TEST_PATH', robjPath + '/test')
+
+    pathManager.addResourcePath('TEST_PATH', os.path.join(robjPath, 'test'))
+    pathManager.addResourcePath('ROBJ_ARCHIVE_PATH',
+        path=os.path.join(robjPath, 'test', 'archive'))
 
 
 def main(argv=None, individual=True):
@@ -46,8 +49,28 @@ def main(argv=None, individual=True):
 
 
 class TestCase(testhelp.TestCase):
+    def getArchiveContents(self, filename):
+        path = os.path.join(self.archivePath, filename)
+        return open(path).read()
+
+    def getResponse(self, uri):
+        cclass, pathvars = self.server.controllers.get(uri)
+        controller = cclass(self.server.data, None, pathvars)
+        response = controller.do_GET()
+        return response
+
+    def getModel(self, uri):
+        response = self.getResponse(uri)
+        return response.model
+
+    def getXML(self, uri):
+        response = self.getResponse(uri)
+        return response.message
+
     def setUp(self):
         testhelp.TestCase.setUp(self)
+
+        self.archivePath = pathManager.getPath('ROBJ_ARCHIVE_PATH')
 
         from robj.lib import log
         log.setupLogging()
