@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<employee>
+    <name>Fred Jones</name>
+    <address>
+        <street>123 1st St.</street>
+        <city>Mars</city>
+        <state>ASD</state>
+        <zipcode>12345</zipcode>
+    </address>
+    <phone>555-123-4567</phone>
+</employee>

@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<employee>
+    <name>Bob</name>
+    <address>
+        <street>37 3st St.</street>
+        <city>Jupiter</city>
+        <state>JKL</state>
+        <zipcode>54326</zipcode>
+    </address>
+    <phone>555-123-4569</phone>
+</employee>

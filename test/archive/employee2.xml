@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<employee>
+    <name>Sally</name>
+    <address>
+        <street>456 2st St.</street>
+        <city>Venus</city>
+        <state>FDH</state>
+        <zipcode>54321</zipcode>
+    </address>
+    <phone>555-123-4568</phone>
+</employee>
