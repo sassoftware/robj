@@ -69,7 +69,7 @@ class HTTPClient(object):
 
         # Strip off the leading base URI.
         elif uri.startswith(self._client.baseURI):
-            return uri[len(self._client.baseURI)-1:]
+            return uri[len(self._client.baseURI):]
 
         # Otherwise, raise an exception.
         else:
