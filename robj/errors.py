@@ -92,3 +92,11 @@ class ExternalUriError(GlueError):
     _params = ['uri', 'base', ]
     _template = ('Can not access %(uri)s since it is not under the base uri '
         '%(base)s')
+
+class SerializationError(GlueError):
+    """
+    Raised when an instance can not be serialized via XObj.
+    """
+
+    _params = ['instance', 'msg', ]
+    _template = 'Unable to serialize instance: %(msg)s'
