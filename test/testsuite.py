@@ -13,10 +13,10 @@
 import os
 import sys
 
-import bootstrap # pyflakes=ignore
+import bootstrap  # pyflakes=ignore
 
 from testrunner import pathManager, testhelp
-from testrunner.testhelp import SkipTestException # pyflakes=ignore
+from testrunner.testhelp import SkipTestException  # pyflakes=ignore
 
 EXCLUDED_PATHS = ['scripts/.*', 'epdb.py', 'stackutil.py', 'test/.*']
 
@@ -33,7 +33,7 @@ def main(argv=None, individual=True):
         argv = list(sys.argv)
 
     from conary.lib import util
-    from conary.lib import coveragehook # pyflakes=ignore
+    from conary.lib import coveragehook  # pyflakes=ignore
     sys.excepthook = util.genExcepthook(True, catchSIGUSR1=False)
 
     handlerClass = testhelp.getHandlerClass(testhelp.ConaryTestSuite,
