@@ -18,7 +18,7 @@ from threading import RLock
 
 from xobj import xobj
 
-from robj.obj import rObj
+from robj.proxy import rObjProxy
 from robj.errors import HTTPDeleteError
 from robj.errors import ExternalUriError
 from robj.errors import SerializationError
@@ -134,7 +134,6 @@ class HTTPClient(object):
                 raise HTTPDeleteError(uri=self._uri, status=response.status,
                     reason=response.reason, response=response)
 
-            response.doc = None
             self._instCache.clear(uri)
 
             return response
@@ -142,7 +141,7 @@ class HTTPClient(object):
         # Parse XML document.
         doc = xobj.parse(response.read())
 
-        # Cache response and return rObj instance.
+        # Cache response and return rObjProxy instance.
         return self._instCache.cache(self, uri, doc, parent=parent)
 
     def do_GET(self, *args, **kwargs):
@@ -151,7 +150,7 @@ class HTTPClient(object):
         @param uri: Full or partial URI (relative to the base URI).
         @type uri: str
         @return rObj representing response.
-        @rtype robj.obj.rObj
+        @rtype robj.obj.rObjProxy
         """
 
         return self._handle_request('GET', *args, **kwargs)
@@ -165,7 +164,7 @@ class HTTPClient(object):
                      wrapper.
         @type xdoc: instance
         @return rObj representing response.
-        @rtype robj.obj.rObj
+        @rtype robj.obj.rObjProxy
         """
 
         return self._handle_request('POST', *args, **kwargs)
@@ -179,7 +178,7 @@ class HTTPClient(object):
                      wrapper.
         @type xdoc: instance
         @return rObj representing response.
-        @rtype robj.obj.rObj
+        @rtype robj.obj.rObjProxy
         """
 
         return self._handle_request('PUT', *args, **kwargs)
@@ -226,12 +225,17 @@ class InstanceCache(dict):
 
         self._write_lock.acquire()
 
+        # Pull the top level object out of the document.
+        if isinstance(doc, xobj.Document):
+            assert len(doc._xobj.elements) == 1
+            doc = getattr(doc, doc._xobj.elements[0])
+
         if uri in self:
             robj = self[uri]
             if not robj._dirty:
                 robj._doc = doc
         else:
-            robj = rObj(uri, client, doc, parent=parent)
+            robj = rObjProxy(uri, client, doc, parent=parent)
             self[uri] = robj
 
         self._write_lock.release()
