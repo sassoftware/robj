@@ -68,6 +68,10 @@ class Client(object):
     def baseURI(self):
         return self._baseUri
 
+    @property
+    def path(self):
+        return self._path.rstrip('/')
+
     def _getHeaders(self, headers=None):
         hdrs = self._headers.copy()
         hdrs.update(headers or {})

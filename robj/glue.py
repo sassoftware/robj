@@ -62,9 +62,13 @@ class HTTPClient(object):
         # Strip off trailing slashes
         uri = uri.rstrip('/')
 
+        # Trim off the base path.
+        if uri.startswith(self._client.path):
+            return uri[len(self._client.path):].rstrip('/')
+
         # Assume the URI is relative if it doesn't start with an
         # expected scheme.
-        if not uri.startswith('http'):
+        elif not uri.startswith('http'):
             return uri
 
         # Strip off the leading base URI.
@@ -95,6 +99,21 @@ class HTTPClient(object):
 
         return xml
 
+    def _handle_error(self, response):
+        """
+        Handle all error conditions by raising a reasonable exception.
+        """
+
+        raise NotImplementedError
+
+    def _handle_redirect(self, response):
+        """
+        Handle all redirect conditions. This may include long running jobs
+        implemented through a see other (303).
+        """
+
+        raise NotImplementedError
+
     def _handle_request(self, method, uri, xdoc=None, parent=None):
         """
         Process all types of requests.
@@ -109,8 +128,8 @@ class HTTPClient(object):
 
         if method in ('POST', 'PUT', ):
             # Make sure there is a document for PUT and POST requests.
-            if not xdoc:
-                raise AttributeError, 'method requires document instance'
+            if xdoc is None:
+                raise TypeError, 'method requires document instance'
 
             xml = self._serialize_document(xdoc)
             args = (uri, xml)
@@ -138,11 +157,24 @@ class HTTPClient(object):
 
             return response
 
+        # Handle other error codes.
+        if response.status >= 400:
+            return self._handle_error(response)
+
+        # Handle redirects.
+        elif response.status >= 300:
+            return self._handle_redirect(response)
+
         # Parse XML document.
         doc = xobj.parse(response.read())
 
+        # Pull the top level object out of the document.
+        assert isinstance(doc, xobj.Document)
+        assert len(doc._xobj.elements) == 1
+        root = getattr(doc, doc._xobj.elements[0])
+
         # Cache response and return rObjProxy instance.
-        return self._instCache.cache(self, uri, doc, parent=parent)
+        return self._instCache.cache(self, uri, root, parent=parent)
 
     def do_GET(self, *args, **kwargs):
         """
@@ -218,24 +250,19 @@ class InstanceCache(dict):
                 self.pop(element)
         self._write_lock.release()
 
-    def cache(self, client, uri, doc, parent=None):
+    def cache(self, client, uri, root, parent=None):
         """
         Cache the given robj if needed.
         """
 
         self._write_lock.acquire()
 
-        # Pull the top level object out of the document.
-        if isinstance(doc, xobj.Document):
-            assert len(doc._xobj.elements) == 1
-            doc = getattr(doc, doc._xobj.elements[0])
-
         if uri in self:
             robj = self[uri]
             if not robj._dirty:
-                robj._doc = doc
+                robj._root = root
         else:
-            robj = rObjProxy(uri, client, doc, parent=parent)
+            robj = rObjProxy(uri, client, root, parent=parent)
             self[uri] = robj
 
         self._write_lock.release()
