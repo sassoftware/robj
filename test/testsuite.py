@@ -33,7 +33,7 @@ def main(argv=None, individual=True):
         argv = list(sys.argv)
 
     from conary.lib import util
-    from conary.lib import coveragehook # pyflakes = ignore
+    from conary.lib import coveragehook # pyflakes=ignore
     sys.excepthook = util.genExcepthook(True, catchSIGUSR1=False)
 
     handlerClass = testhelp.getHandlerClass(testhelp.ConaryTestSuite,
