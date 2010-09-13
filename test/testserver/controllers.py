@@ -132,6 +132,7 @@ class Api(AbstractController):
 
     def do_GET(self):
         api = models.Api()
+        api.id = self.__uri__
         api.version = '1.0'
         api.employees = models.EmployeesRef()
         api.employees.href = Employees.__uri__
