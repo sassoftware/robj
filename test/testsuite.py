@@ -12,16 +12,13 @@
 #
 import os
 import sys
-import unittest
 
-import bootstrap
+import bootstrap # pyflakes=ignore
 
 from testrunner import pathManager, testhelp
-from testrunner.testhelp import SkipTestException
-
+from testrunner.testhelp import SkipTestException # pyflakes=ignore
 
 EXCLUDED_PATHS = ['scripts/.*', 'epdb.py', 'stackutil.py', 'test/.*']
-
 
 def setup():
     pathManager.addExecPath('XOBJ_PATH')
@@ -31,13 +28,12 @@ def setup():
     pathManager.addResourcePath('ROBJ_ARCHIVE_PATH',
         path=os.path.join(robjPath, 'test', 'archive'))
 
-
 def main(argv=None, individual=True):
     if argv is None:
         argv = list(sys.argv)
 
     from conary.lib import util
-    from conary.lib import coveragehook
+    from conary.lib import coveragehook # pyflakes = ignore
     sys.excepthook = util.genExcepthook(True, catchSIGUSR1=False)
 
     handlerClass = testhelp.getHandlerClass(testhelp.ConaryTestSuite,
