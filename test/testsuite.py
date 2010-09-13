@@ -17,6 +17,7 @@ import unittest
 import bootstrap
 
 from testrunner import pathManager, testhelp
+from testrunner.testhelp import SkipTestException
 
 
 EXCLUDED_PATHS = ['scripts/.*', 'epdb.py', 'stackutil.py', 'test/.*']
@@ -61,7 +62,7 @@ class TestCase(testhelp.TestCase):
 
     def getModel(self, uri):
         response = self.getResponse(uri)
-        return response.model
+        return response._model
 
     def getXML(self, uri):
         response = self.getResponse(uri)
