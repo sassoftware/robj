@@ -29,9 +29,9 @@ def require_collection(func):
     return wrapper
 
 
-class rObj(object):
+class rObjProxy(object):
     """
-    rObj object wrapper class.
+    REST object proxy class.
     """
 
     __slots__ = ('_uri', '_client', '_doc', '_parent', '_tag', '_isCollection',
