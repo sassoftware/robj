@@ -32,60 +32,48 @@ def require_collection(func):
 class rObjProxy(object):
     """
     REST object proxy class.
+    @param uri: URI that identifies this instance.
+    @type uri: str
+    @param client: Instance of a glue client.
+    @type client: robj.glue.HTTPClient
+    @param root: XObj object tree.
+    @type root: xobj.xobj.XObj
+    @param parent: Parent rObj instance.
+    @type parent: robj.proxy.rObjProxy
     """
 
-    __slots__ = ('_uri', '_client', '_doc', '_parent', '_tag', '_isCollection',
+    __slots__ = ('_uri', '_client', '_root', '_parent', '_tag', '_isCollection',
         '_dirty', '_dl', '_childTag', )
 
-    def __init__(self, uri, client, doc, parent=None):
+    def __init__(self, uri, client, root, parent=None):
         self._uri = uri
         self._client = client
-        self._doc = doc
+        self._root = root
+
         if parent is not None:
-            #self._parent = weakref.ref(parent)
             self._parent = parent
         else:
             self._parent = None
 
-        if self._doc is not None:
-            if self._parent and self._parent.isCollection:
-                self._tag = self._parent.childTag
-            else:
-                assert len(self._doc._xobj.elements) == 1
-                self._tag = self._doc._xobj.elements[0]
-        else:
-            self._tag = None
-
+        self._tag = self._root._xobj.tag
         self._dl = RLock()
 
         self._childTag = ''
         self._isCollection = False
+        # Infer from tag names if this is intended to be a collection. Yes, this
+        # is a hack, find a better way.
         if self._tag and self._tag.endswith('s'):
-            root = getattr(self._doc, self._tag)
-            elements = root._xobj.elements
+            elements = self._root._xobj.elements
             if (len(elements) == 1 and self._tag[:-1] in elements):
-                element = getattr(root, self._tag[:-1])
+                element = getattr(self._root, self._tag[:-1])
                 if not isinstance(element, list):
-                    setattr(root, self._tag[:-1], [element, ])
+                    setattr(self._root, self._tag[:-1], [element, ])
                 self._childTag = self._tag[:-1]
                 self._isCollection = True
-        elif isinstance(getattr(self._doc, self._tag, None), list):
+        elif isinstance(self._root, list):
             self._isCollection = True
 
         self._dirty = False
-
-    @property
-    def _root(self):
-        self._dl.acquire()
-        if (self._parent and self._parent.isCollection and
-            not isinstance(self._doc, xobj.Document)):
-            root = self._doc
-        else:
-            root = getattr(self._doc, self._tag)
-            if self._isCollection and self._childTag:
-                root = getattr(root, self._childTag)
-            self._dl.release()
-        return root
 
     @property
     def isCollection(self):
@@ -236,7 +224,7 @@ class rObjProxy(object):
         if self._dirty:
             self._dl.acquire()
             self._dirty = False
-            self._client.do_PUT(self._uri, self._doc)
+            self._client.do_PUT(self._uri, self._root)
             self._dl.release()
         else:
             self.refresh()
