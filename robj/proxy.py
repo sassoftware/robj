@@ -16,15 +16,13 @@ Module for implementing rObj classes.
 
 from threading import RLock
 
-from xobj import xobj
-
 from robj.errors import ExternalUriError
 from robj.errors import RemoteInstanceOverwriteError
 
 def require_collection(func):
     def wrapper(self, *args, **kwargs):
         if not self._isCollection:
-            raise TypeError
+            raise TypeError, 'A list type is required for this method.'
         return func(self, *args, **kwargs)
     return wrapper
 
@@ -38,12 +36,12 @@ class rObjProxy(object):
     @type client: robj.glue.HTTPClient
     @param root: XObj object tree.
     @type root: xobj.xobj.XObj
-    @param parent: Parent rObj instance.
+    @param parent: Parent rObj instance (optional).
     @type parent: robj.proxy.rObjProxy
     """
 
     __slots__ = ('_uri', '_client', '_root', '_parent', '_tag', '_isCollection',
-        '_dirty', '_dl', '_childTag', )
+        '_dirty_flag', '_dl', '_childTag', '_local_cache')
 
     def __init__(self, uri, client, root, parent=None):
         self._uri = uri
@@ -55,11 +53,16 @@ class rObjProxy(object):
         else:
             self._parent = None
 
-        self._tag = self._root._xobj.tag
         self._dl = RLock()
+        self._dirty_flag = False
+        self._tag = self._root._xobj.tag
 
+        self._local_cache = {}
+
+        # Colleciton related attributes
         self._childTag = ''
         self._isCollection = False
+
         # Infer from tag names if this is intended to be a collection. Yes, this
         # is a hack, find a better way.
         if self._tag and self._tag.endswith('s'):
@@ -73,37 +76,49 @@ class rObjProxy(object):
         elif isinstance(self._root, list):
             self._isCollection = True
 
-        self._dirty = False
+    def _set_dirty(self, value):
+        if self._isChild:
+            self._parent._dirty_flag = value
+        self._dirty_flag = value
+    def _get_dirty(self):
+        return self._dirty_flag
+    _dirty = property(_get_dirty, _set_dirty)
 
     @property
-    def isCollection(self):
-        return self._isCollection
-
-    @property
-    def parent(self):
-        return self._parent
-
-    @property
-    def childTag(self):
-        return self._childTag
+    def _isChild(self):
+        if self._parent and self._uri == self._parent._uri:
+            return True
+        return False
 
     @property
     def elements(self):
         return self._root._xobj.elements
 
+    @property
+    def attributes(self):
+        return self._root._xobj.attributes.keys()
+
+    def __dir__(self):
+        elements = self._root._xobj.elements
+        attributes = self._root._xobj.attributes.keys()
+        return list(elements + attributes)
+
     def __repr__(self):
         return '<robj.rObj(%s)>' % self._tag
+
+    __str__ = __repr__
+
+    def __nonzero__(self):
+        if self._root._xobj.elements:
+            return True
+        else:
+            return bool(self._root)
 
     def _getObj(self, name, value):
         # Wrap this instance with an rObj.
         if hasattr(value, 'id'):
-            # Wrap the xobj in an xobj document so that it can be serialized
-            # later.
-            if isinstance(value, xobj.XObj):
-                doc = xobj.Document()
-                doc._xobj.elements.append(name)
-                setattr(doc, name, value)
-            return self.__class__(value.id, self._client, doc, parent=self)
+            return self._client.cache(value.id, self._client, value,
+                parent=self)
 
         # Get the instance pointed to by the href.
         elif hasattr(value, 'href'):
@@ -115,7 +130,10 @@ class rObjProxy(object):
 
         # Wrap anything that has elements in an rObj.
         elif hasattr(value, '_xobj') and value._xobj.elements:
-            return self.__class__(self._uri, self._client, value, parent=self)
+            if name not in self._local_cache:
+                self._local_cache[name] = self.__class__(self._uri,
+                    self._client, value, parent=self)
+            return self._local_cache[name]
 
         return None
 
@@ -130,15 +148,15 @@ class rObjProxy(object):
         return True
 
     def __getattr__(self, name):
-        if not name.startswith('_'):
+        try:
             val = getattr(self._root, name)
-            obj = self._getObj(name, val)
-            if obj:
-                return obj
-            else:
-                return val
+        except AttributeError:
+            raise AttributeError, "'%r' has no attribute '%s'" % (self, name)
+        obj = self._getObj(name, val)
+        if obj is not None:
+            return obj
         else:
-            return object.__getattribute__(self, name)
+            return val
 
     def __setattr__(self, name, value):
         if not name.startswith('_'):
@@ -201,14 +219,12 @@ class rObjProxy(object):
             yield self[i]
         self._dl.release()
 
+    @require_collection
     def __len__(self):
-        if self._isCollection:
-            self._dl.acquire()
-            l = len(self._root)
-            self._dl.release()
-            return l
-        else:
-            return True
+        self._dl.acquire()
+        l = len(self._root)
+        self._dl.release()
+        return l
 
     @require_collection
     def append(self, value):
@@ -223,8 +239,15 @@ class rObjProxy(object):
 
         if self._dirty:
             self._dl.acquire()
-            self._dirty = False
-            self._client.do_PUT(self._uri, self._root)
+
+            # Must mark instance as clean before PUTing contents, otherwise
+            # instance cache will not inject the new model.
+            self._dirty_flag = False
+
+            if self._isChild:
+                self._parent.persist()
+            else:
+                self._client.do_PUT(self._uri, self._root)
             self._dl.release()
         else:
             self.refresh()
@@ -238,14 +261,14 @@ class rObjProxy(object):
 
     def refresh(self, force=False):
         """
-        Refresh the instance from the server if it is not marked as dirty.
+        Refresh the instance from the server if it has not been modified.
         @param force: Optional parameter (defaults to False) to force the
-                      refresh even if the instance is marked as dirty.
+                      refresh even if the instance has been modified locally.
         @type force: boolean
         """
 
         if not self._dirty or force:
             self._dl.acquire()
             self._dirty = False
-            self._client.do_GET(self._uri)
+            self._client.do_GET(self._uri, cache=False)
             self._dl.release()
