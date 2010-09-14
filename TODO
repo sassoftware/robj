@@ -1,0 +1,10 @@
+TODO
+====
+
+* Figure out how to let someone specify arguments in the uri and properly
+  cache instances based on any arguments.
+* Implement some way to do file uploads.
+* Possibly mark invalid instances as such. When an resource is deleted or
+  refreshed there may still be references to the previous version of this
+  resource. They could could be marked as invalid, letting the user know that
+  they are out of date if the user attempts to access any of the attributes.
