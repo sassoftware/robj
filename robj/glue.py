@@ -180,7 +180,7 @@ class HTTPClient(object):
             uri = root.id
 
         # Cache response and return rObjProxy instance.
-        return self.cache.cache(self, uri, root, parent=parent)
+        return self.cache(self, uri, root, parent=parent)
 
     def do_GET(self, *args, **kwargs):
         """
@@ -274,3 +274,5 @@ class InstanceCache(dict):
 
         self._write_lock.release()
         return robj
+
+    __call__ = cache
