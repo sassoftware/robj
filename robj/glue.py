@@ -51,7 +51,7 @@ class HTTPClient(object):
         self._client = _HTTPClient(baseUri, headers=headers,
             maxClients=maxClients, maxConnections=maxConnections)
 
-        self._instCache = InstanceCache()
+        self.cache = InstanceCache()
 
     def _normalize_uri(self, uri):
         """
@@ -114,7 +114,7 @@ class HTTPClient(object):
 
         raise NotImplementedError
 
-    def _handle_request(self, method, uri, xdoc=None, parent=None):
+    def _handle_request(self, method, uri, xdoc=None, parent=None, cache=True):
         """
         Process all types of requests.
         """
@@ -123,8 +123,8 @@ class HTTPClient(object):
         uri = self._normalize_uri(uri)
 
         # Check the cache before moving on if this is a GET.
-        if method == 'GET' and uri in self._instCache:
-            return self._instCache[uri]
+        if method == 'GET' and uri in self.cache and cache:
+            return self.cache[uri]
 
         if method in ('POST', 'PUT', ):
             # Make sure there is a document for PUT and POST requests.
@@ -153,7 +153,7 @@ class HTTPClient(object):
                 raise HTTPDeleteError(uri=self._uri, status=response.status,
                     reason=response.reason, response=response)
 
-            self._instCache.clear(uri)
+            self.cache.clear(uri)
 
             return response
 
@@ -173,8 +173,14 @@ class HTTPClient(object):
         assert len(doc._xobj.elements) == 1
         root = getattr(doc, doc._xobj.elements[0])
 
+        # If the top level object has an 'id' attribute, use that as its URI.
+        # This is here to handle appending to collections, where the resource
+        # you get back is the new instance, not the collection itself.
+        if 'id' in root._xobj.attributes:
+            uri = root.id
+
         # Cache response and return rObjProxy instance.
-        return self._instCache.cache(self, uri, root, parent=parent)
+        return self.cache.cache(self, uri, root, parent=parent)
 
     def do_GET(self, *args, **kwargs):
         """
@@ -261,6 +267,7 @@ class InstanceCache(dict):
             robj = self[uri]
             if not robj._dirty:
                 robj._root = root
+                robj._local_cache = {}
         else:
             robj = rObjProxy(uri, client, root, parent=parent)
             self[uri] = robj
