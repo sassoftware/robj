@@ -8,3 +8,4 @@ TODO
   refreshed there may still be references to the previous version of this
   resource. They could could be marked as invalid, letting the user know that
   they are out of date if the user attempts to access any of the attributes.
+* Allow consumers of rObj to provide a type map or document class for each URI.
