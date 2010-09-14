@@ -54,30 +54,40 @@ class rObjProxy(object):
             self._parent = None
 
         self._dl = RLock()
-        self._dirty_flag = False
         self._tag = self._root._xobj.tag
 
         # Colleciton related attributes
-        self._childTag = ''
+        self._childTag = None
         self._isCollection = False
 
         self._reset()
 
     def _reset(self):
         self._local_cache = {}
+        self._dirty_flag = False
 
         # Infer from tag names if this is intended to be a collection. Yes, this
         # is a hack, find a better way.
-        if self._tag and self._tag.endswith('s'):
-            elements = self._root._xobj.elements
-            if (len(elements) == 1 and self._tag[:-1] in elements):
-                element = getattr(self._root, self._tag[:-1])
-                if not isinstance(element, list):
-                    setattr(self._root, self._tag[:-1], [element, ])
-                self._childTag = self._tag[:-1]
+
+        ##
+        # How to guess if something is a collection:
+        # 1. Top level tag name ends in 's' and number of elements is 0 or 1 and
+        #    if 1 sub element is same as top level tag without the 's'.
+        # 2. Number of elements is 1.
+        ##
+
+        if self._tag.endswith('s') and len(self.elements) == 0:
+            self._childTag = self._tag[:-1]
+        elif len(self.elements) == 1:
+            self._childTag = self.elements[0]
+
+            # If child element is defined and is not a list already, make
+            # it one.
+            if len(self.elements) == 1 and self._childTag in self.elements:
+                collection = getattr(self, self._childTag)
+                if not isinstance(collection, list):
+                    setattr(self, self._childTag, [collection, ])
                 self._isCollection = True
-        elif isinstance(self._root, list):
-            self._isCollection = True
 
     def _set_dirty(self, value):
         if self._isChild:
@@ -86,6 +96,15 @@ class rObjProxy(object):
     def _get_dirty(self):
         return self._dirty_flag
     _dirty = property(_get_dirty, _set_dirty)
+
+    @property
+    def _collection(self):
+        if self._childTag is None:
+            raise ValueError, 'child tag must be defined'
+        if not hasattr(self, self._childTag):
+            setattr(self._root, self._childTag, list())
+            self._isCollection = True
+        return getattr(self, self._childTag)
 
     @property
     def _isChild(self):
@@ -120,7 +139,7 @@ class rObjProxy(object):
     def _getObj(self, name, value):
         # Wrap this instance with an rObj.
         if hasattr(value, 'id'):
-            return self._client.cache(value.id, self._client, value,
+            return self._client.cache(self._client, value.id, value,
                 parent=self)
 
         # Get the instance pointed to by the href.
@@ -178,9 +197,10 @@ class rObjProxy(object):
 
     @require_collection
     def __getitem__(self, idx):
-        assert isinstance(idx, int), 'index is required to be an interger'
+        if not isinstance(idx, int):
+            raise TypeError, 'index is required to be an interger'
 
-        val = self._root[idx]
+        val = self._collection[idx]
         obj = self._getObj(self._childTag, val)
         if obj:
             return obj
@@ -189,50 +209,50 @@ class rObjProxy(object):
 
     @require_collection
     def __setitem__(self, idx, value):
-        assert isinstance(idx, int), 'index is required to be an interger'
+        if not isinstance(idx, int):
+            raise TypeError, 'index is required to be an interger'
 
         # Make sure the current value isn't an instance.
         self._dl.acquire()
-        val = self._root.get(idx)
+        val = self._collection.get(idx)
         if hasattr(val, 'id') or hasattr(val, 'href'):
             raise RemoteInstanceOverwriteError(name=idx, uri=self._uri,
                 id=hasattr(val, 'id') and val.id or val.href)
 
-        self._root[idx] = value
+        self._collection[idx] = value
         self._dl.release()
 
     @require_collection
     def __delitem__(self, idx):
-        assert isinstance(idx, int), 'index is required to be an interger'
+        if not isinstance(idx, int):
+            raise TypeError, 'index is required to be an interger'
 
         self._dl.acquire()
-        val = self._root.get(idx)
+        val = self[idx]
         if isinstance(val, self.__class__):
             val.delete()
         elif hasattr(val, 'id'):
             self._client.do_DELETE(val.id)
-        else:
-            del self._root[idx]
+        del self._collection[idx]
         self._dl.release()
 
     @require_collection
     def __iter__(self):
         self._dl.acquire()
-        for i in range(len(self._root)):
+        for i in range(len(self._collection)):
             yield self[i]
         self._dl.release()
 
     @require_collection
     def __len__(self):
         self._dl.acquire()
-        l = len(self._root)
+        l = len(self._collection)
         self._dl.release()
         return l
 
-    @require_collection
     def append(self, value):
         obj = self._client.do_POST(self._uri, value)
-        self._root.append(obj._root)
+        self._collection.append(obj._root)
 
     def persist(self):
         """
