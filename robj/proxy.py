@@ -57,11 +57,14 @@ class rObjProxy(object):
         self._dirty_flag = False
         self._tag = self._root._xobj.tag
 
-        self._local_cache = {}
-
         # Colleciton related attributes
         self._childTag = ''
         self._isCollection = False
+
+        self._reset()
+
+    def _reset(self):
+        self._local_cache = {}
 
         # Infer from tag names if this is intended to be a collection. Yes, this
         # is a hack, find a better way.
@@ -269,6 +272,10 @@ class rObjProxy(object):
 
         if not self._dirty or force:
             self._dl.acquire()
-            self._dirty = False
+
+            # Must mark instance as clean before PUTing contents, otherwise
+            # instance cache will not inject the new model.
+            self._dirty_flag = False
+
             self._client.do_GET(self._uri, cache=False)
             self._dl.release()

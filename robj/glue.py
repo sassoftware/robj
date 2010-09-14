@@ -267,7 +267,7 @@ class InstanceCache(dict):
             robj = self[uri]
             if not robj._dirty:
                 robj._root = root
-                robj._local_cache = {}
+                robj._reset()
         else:
             robj = rObjProxy(uri, client, root, parent=parent)
             self[uri] = robj
