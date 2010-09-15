@@ -74,6 +74,16 @@ class Connection(object):
         #clog.debug('CONNECTION(%s) CONTENT %s' % (id(self), content))
         #clog.debug('CONNECTION(%s) HEADERS %s' % (id(self), headers))
 
+        # If the content stream is a file like object that implements flush,
+        # make sure the contents are flushed to disk. This is important to how
+        # the underlying connection object dertermines file size.
+        if hasattr(content, 'flush'):
+            content.flush()
+
+        # Also make sure to seek to the begining of the file stream.
+        if hasattr(content, 'seek'):
+            content.seek(0)
+
         self._connection.request(method, path, body=content, headers=headers)
         response = self._connection.getresponse()
         return response

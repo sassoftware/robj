@@ -183,11 +183,13 @@ class HTTPClient(object):
 
         # Make sure the response looks like valid xml, otherwise assume that
         # this is a file download an return the content of the response.
-        if not response.read().startswith('<?xml'):
-            return response.read()
+        content = response.content
+        if not content.read(5).startswith('<?xml'):
+            content.seek(0)
+            return content
 
         # Parse XML document.
-        doc = xobj.parse(response.read())
+        doc = xobj.parsef(content)
 
         # Pull the top level object out of the document.
         assert isinstance(doc, xobj.Document)

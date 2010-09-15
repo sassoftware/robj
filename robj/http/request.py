@@ -16,6 +16,7 @@ HTTP Request.
 
 import time
 
+from robj.lib import util
 from robj.errors import HTTPResponseTimeout
 
 class Response(object):
@@ -27,10 +28,10 @@ class Response(object):
         self.status = resp.status
         self.reason = resp.reason
         self.length = resp.length
-        self._doc = resp.read()
+        self.content = util.mktemp()
 
-    def read(self):
-        return self._doc
+        util.copyfileobj(resp, self.content)
+        self.content.seek(0)
 
 
 class Request(object):
