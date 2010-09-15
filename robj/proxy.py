@@ -250,17 +250,24 @@ class rObjProxy(object):
         self._dl.release()
         return l
 
-    def append(self, value):
-        obj = self._client.do_POST(self._uri, value)
-        self._collection.append(obj._root)
+    def append(self, value, post=True):
+        if post:
+            obj = self._client.do_POST(self._uri, value)
+            self._collection.append(obj._root)
+        else:
+            self._collection.append(value)
+            self._dirty_flag = True
 
-    def persist(self):
+    def persist(self, force=False):
         """
         Update the server with any modifications that have been made to this
         instance.
+        @param force: Optional parameter (defaults to False) to force the
+                      refresh even if the instance has been modified locally.
+        @type force: boolean
         """
 
-        if self._dirty:
+        if self._dirty or force:
             self._dl.acquire()
 
             # Must mark instance as clean before PUTing contents, otherwise
