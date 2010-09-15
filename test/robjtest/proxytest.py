@@ -255,3 +255,24 @@ class CollectionTest(testsuite.TestCase):
             empl.add(e.employeeid)
 
         self.failUnlessEqual(len(empl), 3)
+
+    def testSingleItemList(self):
+        employees = self.api.employees
+        employees.append(self.getArchiveModel('employee1.xml'))
+        employees.refresh()
+
+        self.failUnless(employees._isCollection)
+        self.failUnlessEqual(employees._childTag, 'employee')
+
+        employee1 = employees[0]
+        model = self.getArchiveModel('employee1.xml')
+
+        self.failUnlessEqual(employee1.name, model.name)
+
+        employee1.address.zipcode = '90210'
+        employee1.persist()
+
+        employees.refresh()
+        employee2 = employees[0]
+
+        self.failUnlessEqual(employee2.address.zipcode, '90210')
