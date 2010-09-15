@@ -99,14 +99,14 @@ class HTTPClient(object):
 
         return xml
 
-    def _handle_error(self, response):
+    def _handle_error(self, request, response):
         """
         Handle all error conditions by raising a reasonable exception.
         """
 
         raise NotImplementedError
 
-    def _handle_redirect(self, response):
+    def _handle_redirect(self, request, response):
         """
         Handle all redirect conditions. This may include long running jobs
         implemented through a see other (303).
@@ -159,11 +159,11 @@ class HTTPClient(object):
 
         # Handle other error codes.
         if response.status >= 400:
-            return self._handle_error(response)
+            return self._handle_error(request, response)
 
         # Handle redirects.
         elif response.status >= 300:
-            return self._handle_redirect(response)
+            return self._handle_redirect(request, response)
 
         # Parse XML document.
         doc = xobj.parse(response.read())
