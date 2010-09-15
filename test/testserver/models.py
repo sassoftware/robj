@@ -50,6 +50,10 @@ class EmployeesRef(Reference):
     __tag__ = 'employees'
 
 
+class File(Reference):
+    __tag__ = 'file'
+
+
 class Address(AbstractModel):
     __elements__ = ('street', 'city', 'state', 'zipcode', )
     __tag__ = 'address'
@@ -83,6 +87,7 @@ class Employee(AbstractModel):
     phone = str
     products = ProductsRef
     employid = int
+    file = File
 
 
 class Api(AbstractModel):

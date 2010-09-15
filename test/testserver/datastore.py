@@ -51,6 +51,7 @@ class AbstractModelCollection(dict):
 class Employees(AbstractModelCollection):
     def __init__(self):
         AbstractModelCollection.__init__(self)
+        self.files = AttrDict()
         self.productRefs = AttrDict()
 
     def parse(self, xml):
@@ -70,6 +71,8 @@ class Employees(AbstractModelCollection):
         model.id = '%s/%s' % (uri, model.employeeid)
         model.products = models.ProductsRef()
         model.products.href = '%s/products' % model.id
+        model.file = models.File()
+        model.file.href = '%s/file' % model.id
 
         self[model.employeeid] = model
         self.productRefs[model.employeeid] = []
@@ -91,8 +94,9 @@ class Employees(AbstractModelCollection):
         return oldModel
 
     def delete(self, idx):
-        self.pop(idx)
-        self.productRefs.pop(idx)
+        self.pop(idx, None)
+        self.productRefs.pop(idx, None)
+        self.files.pop(idx, None)
 
 
 class Products(AbstractModelCollection):

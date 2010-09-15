@@ -173,6 +173,37 @@ class Employee(AbstractController):
 controllers.register(Employee)
 
 
+class EmployeeFile(AbstractController):
+    __uri__ = '/api/employees/{idx}/file'
+
+    def do_GET(self):
+        idx = self.pathVars.idx
+        model = self.data.employees.get(idx, None)
+        if not model or idx not in self.data.employees.files:
+            return Response(code=404)
+        else:
+            return Response(code=200, doc=self.data.employees.files.get(idx))
+
+    def do_POST(self):
+        idx = self.pathVars.idx
+        if idx not in self.data.employees:
+            return Response(code=404)
+        else:
+            self.data.employees.files[idx] = self._getinput()
+            return Response(code=200)
+
+    do_PUT = do_POST
+
+    def do_DELETE(self):
+        idx = self.pathVars.idx
+        if (idx not in self.data.employees or
+            idx not in self.data.employees.files):
+            return Response(code=404)
+        else:
+            self.data.employees.files.pop(idx)
+            return Response(code=200)
+
+
 class Product(AbstractController):
     __uri__ = '/api/products/{idx}'
 
