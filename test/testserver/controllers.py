@@ -202,6 +202,7 @@ class EmployeeFile(AbstractController):
         else:
             self.data.employees.files.pop(idx)
             return Response(code=200)
+controllers.register(EmployeeFile)
 
 
 class Product(AbstractController):
