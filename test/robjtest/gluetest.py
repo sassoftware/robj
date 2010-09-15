@@ -102,12 +102,12 @@ class ClientTest(testsuite.TestCase):
 
     def testRedirect(self):
         self.failUnlessRaises(NotImplementedError,
-            self._client._handle_redirect, None)
+            self._client._handle_redirect, None, None)
 
         raise testsuite.SkipTestException, 'Redirects are not yet implemented'
 
     def testErrors(self):
         self.failUnlessRaises(NotImplementedError,
-            self._client._handle_error, None)
+            self._client._handle_error, None, None)
 
         raise testsuite.SkipTestException, 'Error handling not yet implemented'
