@@ -84,9 +84,9 @@ class rObjProxy(object):
             # If child element is defined and is not a list already, make
             # it one.
             if len(self.elements) == 1 and self._childTag in self.elements:
-                collection = getattr(self, self._childTag)
+                collection = getattr(self._root, self._childTag)
                 if not isinstance(collection, list):
-                    setattr(self, self._childTag, [collection, ])
+                    setattr(self._root, self._childTag, [collection, ])
                 self._isCollection = True
 
     def _set_dirty(self, value):
@@ -104,7 +104,7 @@ class rObjProxy(object):
         if not hasattr(self, self._childTag):
             setattr(self._root, self._childTag, list())
             self._isCollection = True
-        return getattr(self, self._childTag)
+        return getattr(self._root, self._childTag)
 
     @property
     def _isChild(self):
