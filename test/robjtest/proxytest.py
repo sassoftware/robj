@@ -223,8 +223,6 @@ class CollectionTest(testsuite.TestCase):
         self.failIf(employee1 is employee2)
 
     def testSetItem(self):
-        employees = self.api.employees
-
         # I don't really have a good case for __setitem__ needing to work. You
         # can't replace an item in a collection if it has an id or an href. To
         # remove something from a collection you would delete the individual
