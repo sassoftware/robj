@@ -36,6 +36,9 @@ def main(argv=None, individual=True):
     from conary.lib import coveragehook  # pyflakes=ignore
     sys.excepthook = util.genExcepthook(True, catchSIGUSR1=False)
 
+    from robj.lib import log
+    log.setupLogging()
+
     handlerClass = testhelp.getHandlerClass(testhelp.ConaryTestSuite,
             lambda handler, environ: os.getenv('ROBJ_PATH'),
             lambda handler, environ: EXCLUDED_PATHS)
@@ -68,9 +71,6 @@ class TestCase(testhelp.TestCase):
         testhelp.TestCase.setUp(self)
 
         self.archivePath = pathManager.getPath('ROBJ_ARCHIVE_PATH')
-
-        from robj.lib import log
-        log.setupLogging()
 
         import testserver
         ports = testhelp.findPorts(num=1, closeSockets=True)
