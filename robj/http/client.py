@@ -27,7 +27,7 @@ class Client(object):
     @param baseUri: URI for connectiong to the root of the desired web service.
                     This may contain user information and must be http or https.
     @type baseUri: str
-    @param headers: Any heads that should be included in all requets.
+    @param headers: Any headers that should be included in all requets.
     @type headers: dict
     @param maxClients: The maximum number of workers that will be created to
                        handle requets. Works are created as needed, rather than
