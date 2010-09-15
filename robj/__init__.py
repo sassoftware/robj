@@ -13,7 +13,7 @@
 """
 rObj REST Client Library
 
-This library is primarily intened for use with rPath provied REST APIs, but
+This library is primarily intended for use with rPath provided REST APIs, but
 should be able to interact with other REST based services that follow similar
 best practices.
 
