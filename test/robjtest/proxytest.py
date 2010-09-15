@@ -154,6 +154,17 @@ class rObjProxyTest(testsuite.TestCase):
         employee.refresh()
         self.failUnless(address is employee.address)
 
+    def testFileInteractions(self):
+        # Start with an employee that we can then attach a file to.
+        employee = self.POST('employee2.xml', '/api/employees')
+
+        blob = '\x00\x01' * 100
+
+        employee.file = blob
+        content2 = employee.file
+
+        self.failUnlessEqual(blob, content2)
+
 
 class CollectionTest(testsuite.TestCase):
     def setUp(self):

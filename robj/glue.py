@@ -14,6 +14,7 @@
 Module for binding the HTTP client layer to xobj.
 """
 
+import types
 from threading import RLock
 
 from xobj import xobj
@@ -90,10 +91,17 @@ class HTTPClient(object):
         else:
             meta = getattr(doc, '_xobj', None)
 
+            # If this is not an xobj and it is a string, but it doesn't look
+            # like an xml document, assume that the client meant to upload this
+            # document to the server.
+            if (meta is None and isinstance(doc, types.StringTypes) and
+                not doc.startswith('<?xml')):
+                return doc
+
             # Raise an exception if we can't figure out the tag.
             if meta is None or not meta.tag:
                 raise SerializationError(instance=doc,
-                    msg=('Can not determine tag'))
+                    msg='Can not determine tag')
 
             xml = xobj.toxml(doc, meta.tag)
 
@@ -126,12 +134,15 @@ class HTTPClient(object):
         if method == 'GET' and uri in self.cache and cache:
             return self.cache[uri]
 
+        rawdoc = False
         if method in ('POST', 'PUT', ):
             # Make sure there is a document for PUT and POST requests.
             if xdoc is None:
                 raise TypeError, 'method requires document instance'
 
             xml = self._serialize_document(xdoc)
+            if xml == xdoc:
+                rawdoc = True
             args = (uri, xml)
         else:
             args = (uri, )
@@ -164,6 +175,16 @@ class HTTPClient(object):
         # Handle redirects.
         elif response.status >= 300:
             return self._handle_redirect(request, response)
+
+        # If the raw document was sent to the server, this is probably a file
+        # upload and the response should not contain an xml document.
+        if rawdoc:
+            return response
+
+        # Make sure the response looks like valid xml, otherwise assume that
+        # this is a file download an return the content of the response.
+        if not response.read().startswith('<?xml'):
+            return response.read()
 
         # Parse XML document.
         doc = xobj.parse(response.read())
