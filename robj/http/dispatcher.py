@@ -152,5 +152,14 @@ class RequestDispatcher(object):
         Submit a request to the client pool.
         """
 
-        self._createWorker()
         self._reqs.put(req)
+
+        # Don't use threading if there is only one client allowed.
+        if self._maxClients > 1:
+            self._createWorker()
+        else:
+            if not self._workers:
+                self._workers.append(self._workerClass(self._reqs,
+                    self._maxConnections, name='client'))
+            while self._workers[0].handleRequest(req):
+                self._workers[0].handleRequest(req)
