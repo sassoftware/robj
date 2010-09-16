@@ -84,8 +84,13 @@ class Client(object):
         uri = uri.lstrip('/')
         path = '/'.join((self._path, uri))
 
+        if isinstance(content, file):
+            headers = {'Content-type': 'application/octet-stream', }
+        else:
+            headers = {'Content-type': 'application/xml', }
+
         req = Request(method, path, self._scheme, self._hostport,
-            content=content, headers=self._getHeaders())
+            content=content, headers=self._getHeaders(headers=headers))
 
         self._dispatcher.request(req)
 
