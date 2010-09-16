@@ -119,3 +119,23 @@ class ClientTest(testsuite.TestCase):
         # test ignored error path
         self._client.error_exceptions[404] = None
         response = self._client.do_GET('/foobar')
+
+    def testNormalizeUri(self):
+        path = self._client._client.path
+        baseUri = self._client._client.baseURI
+
+        tests = (
+            (baseUri + '/foobar', '/foobar'),
+            (path + '/foobar', '/foobar'),
+            ('/foobar/', '/foobar'),
+        )
+
+        for input, expected in tests:
+            self.failUnlessEqual(self._client._normalize_uri(input), expected)
+
+        self.failUnlessRaises(errors.ExternalUriError,
+            self._client._normalize_uri, 'httpd://foobar')
+
+    def testSerialize(self):
+        self.failUnlessRaises(errors.SerializationError,
+            self._client._serialize_document, object())
