@@ -25,7 +25,7 @@ class HTTPClientTest(testsuite.TestCase):
         req = self.client.do_GET('/')
         req.wait()
 
-        self.failUnlessEqual(self.getXML('/api'), req.response.read())
+        self.failUnlessEqual(self.getXML('/api'), req.response.content.read())
 
     def testGETError(self):
         req = self.client.do_GET('/foobar')
@@ -38,7 +38,7 @@ class HTTPClientTest(testsuite.TestCase):
         req = self.client.do_POST('/employees', employee1)
         req.wait()
 
-        clientEmployee = req.response.read()
+        clientEmployee = req.response.content.read()
         self.failUnlessEqual(clientEmployee, self.getXML('/api/employees/0'))
 
     def testPOSTError(self):
@@ -54,7 +54,7 @@ class HTTPClientTest(testsuite.TestCase):
         req = self.client.do_POST('/employees', employee1)
         req.wait()
 
-        xml = req.response.read()
+        xml = req.response.content.read()
 
         # Change the employees name from Fred to Bob.
         xml2 = xml.replace('Fred', 'Bob')
@@ -62,7 +62,7 @@ class HTTPClientTest(testsuite.TestCase):
         req2 = self.client.do_PUT('/employees/0', xml2)
         req2.wait()
 
-        respxml = req2.response.read()
+        respxml = req2.response.content.read()
 
         self.failUnlessEqual(xml2, respxml)
         self.failUnlessEqual(respxml, self.getXML('/api/employees/0'))
@@ -71,7 +71,7 @@ class HTTPClientTest(testsuite.TestCase):
         req = self.client.do_GET('/')
         req.wait()
 
-        xml = req.response.read()
+        xml = req.response.content.read()
         xml2 = xml.replace('1.0', '2.0')
 
         req2 = self.client.do_PUT('/', xml2)
