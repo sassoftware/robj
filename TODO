@@ -12,4 +12,3 @@ TODO
 * Figure out how to make running dir on an instance not fetch all attributes.
 * Implement handling of HTTP error codes.
 * Implement handling of HTTP redirects.
-* Allow users some way to do file uploads/downloads.

@@ -68,13 +68,99 @@ class HTTPResponseTimeout(HTTPError):
     _template = 'Timeout reached waiting for response'
 
 
-class HTTPDeleteError(HTTPError):
+class HTTPResponseError(HTTPError):
+    """
+    Generic response error.
+    """
+
+    _params = ['uri', 'status', 'reason', 'response', ]
+    _template = 'Response error accessing %(uri)s: %(reason)s [%(status)s]'
+
+
+class HTTPDeleteError(HTTPResponseError):
     """
     Raised when an unexpected status is returned from a DELETE request.
     """
 
-    _params = ['status', 'reason', 'resp', ]
     _template = 'Deleting %(uri)s failed with %(reason)s [%(status)s]'
+
+
+class HTTPUnauthorizedError(HTTPResponseError):
+    """
+    Raised when a 401 status is returned.
+    """
+
+
+class HTTPForbiddenError(HTTPResponseError):
+    """
+    Raised when a 403 status is returned.
+    """
+
+
+class HTTPNotFoundError(HTTPResponseError):
+    """
+    Raised when a 404 status is returned.
+    """
+
+
+class HTTPMethodNotAllowedError(HTTPResponseError):
+    """
+    Raised when a 405 status is returned.
+    """
+
+
+class HTTPNotAcceptableError(HTTPResponseError):
+    """
+    Raised when a 406 status is returned.
+    """
+
+
+class HTTPRequestTimeoutError(HTTPResponseError):
+    """
+    Raised when a 408 status is returned.
+    """
+
+
+class HTTPConflictError(HTTPResponseError):
+    """
+    Raised when a 409 status is returned.
+    """
+
+
+class HTTPGoneError(HTTPResponseError):
+    """
+    Raised when a 410 status is returned.
+    """
+
+
+class HTTPInternalServerError(HTTPResponseError):
+    """
+    Raised when a 500 status is returned.
+    """
+
+
+class HTTPNotImplementedError(HTTPResponseError):
+    """
+    Raised when a 501 status is returned.
+    """
+
+
+class HTTPBadGatewayError(HTTPResponseError):
+    """
+    Raised when a 502 status is returned.
+    """
+
+
+class HTTPServiceUnavailableError(HTTPResponseError):
+    """
+    Raised when a 503 status is returned.
+    """
+
+
+class HTTPGatewayTimeoutError(HTTPResponseError):
+    """
+    Raised when a 504 status is returned.
+    """
 
 
 class GlueError(rObjError):
@@ -92,6 +178,7 @@ class ExternalUriError(GlueError):
     _params = ['uri', 'base', ]
     _template = ('Can not access %(uri)s since it is not under the base uri '
         '%(base)s')
+
 
 class SerializationError(GlueError):
     """

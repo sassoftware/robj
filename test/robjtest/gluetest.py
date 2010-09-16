@@ -16,6 +16,7 @@ testsuite.setup()
 
 from xobj import xobj
 
+from robj import errors
 from robj.glue import HTTPClient
 
 class ClientTest(testsuite.TestCase):
@@ -102,12 +103,19 @@ class ClientTest(testsuite.TestCase):
 
     def testRedirect(self):
         self.failUnlessRaises(NotImplementedError,
-            self._client._handle_redirect, None, None)
+            self._client._handle_redirect, None, None, None)
 
         raise testsuite.SkipTestException, 'Redirects are not yet implemented'
 
     def testErrors(self):
-        self.failUnlessRaises(NotImplementedError,
-            self._client._handle_error, None, None)
+        # test delete error path
+        self.failUnlessRaises(errors.HTTPDeleteError,
+            self._client.do_DELETE, '/')
 
-        raise testsuite.SkipTestException, 'Error handling not yet implemented'
+        # test normal error path
+        self.failUnlessRaises(errors.HTTPNotImplementedError,
+            self._client.do_POST, '/', '')
+
+        # test ignored error path
+        self._client.error_exceptions[404] = None
+        response = self._client.do_GET('/foobar')

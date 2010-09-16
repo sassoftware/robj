@@ -19,6 +19,7 @@ from threading import RLock
 
 from xobj import xobj
 
+from robj import errors
 from robj.proxy import rObjProxy
 from robj.errors import HTTPDeleteError
 from robj.errors import ExternalUriError
@@ -45,6 +46,22 @@ class HTTPClient(object):
                            are talking to multiple hosts. (default: 2)
     @type maxConnections: int
     """
+
+    error_exceptions = {
+        401: errors.HTTPUnauthorizedError,
+        403: errors.HTTPForbiddenError,
+        404: errors.HTTPNotFoundError,
+        405: errors.HTTPMethodNotAllowedError,
+        406: errors.HTTPNotAcceptableError,
+        408: errors.HTTPRequestTimeoutError,
+        409: errors.HTTPConflictError,
+        410: errors.HTTPGoneError,
+        500: errors.HTTPInternalServerError,
+        501: errors.HTTPNotImplementedError,
+        502: errors.HTTPBadGatewayError,
+        503: errors.HTTPServiceUnavailableError,
+        504: errors.HTTPGatewayTimeoutError,
+    }
 
     def __init__(self, baseUri, headers=None, maxClients=None,
         maxConnections=None):
@@ -108,14 +125,24 @@ class HTTPClient(object):
 
         return xml
 
-    def _handle_error(self, request, response):
+    def _handle_error(self, uri, request, response):
         """
         Handle all error conditions by raising a reasonable exception.
         """
 
-        raise NotImplementedError
+        default = errors.HTTPResponseError
+        ExceptionClass = self.error_exceptions.get(response.status, default)
 
-    def _handle_redirect(self, request, response):
+        # If error code is not marked as ignored, raise the definied exception.
+        if ExceptionClass is not None:
+            raise ExceptionClass(uri=uri, status=response.status,
+                reason=response.reason, response=response)
+
+        # If this error status is marked to be ignored, just return the
+        # response.
+        return response
+
+    def _handle_redirect(self, uri, request, response):
         """
         Handle all redirect conditions. This may include long running jobs
         implemented through a see other (303).
@@ -162,7 +189,7 @@ class HTTPClient(object):
         if method == 'DELETE':
             # Raise an exception if the resource could not be deleted.
             if response.status not in (404, 200):
-                raise HTTPDeleteError(uri=self._uri, status=response.status,
+                raise HTTPDeleteError(uri=uri, status=response.status,
                     reason=response.reason, response=response)
 
             self.cache.clear(uri)
@@ -171,11 +198,11 @@ class HTTPClient(object):
 
         # Handle other error codes.
         if response.status >= 400:
-            return self._handle_error(request, response)
+            return self._handle_error(uri, request, response)
 
         # Handle redirects.
         elif response.status >= 300:
-            return self._handle_redirect(request, response)
+            return self._handle_redirect(uri, request, response)
 
         # If the raw document was sent to the server, this is probably a file
         # upload and the response should not contain an xml document.
