@@ -16,6 +16,7 @@ testsuite.setup()
 
 from xobj import xobj
 
+from robj.lib import util
 from robj.glue import HTTPClient
 from robj.proxy import rObjProxy
 
@@ -158,12 +159,40 @@ class rObjProxyTest(testsuite.TestCase):
         # Start with an employee that we can then attach a file to.
         employee = self.POST('employee2.xml', '/api/employees')
 
-        blob = '\x00\x01' * 100
-
+        # Create a file.
+        blob = util.mktemp()
+        blob.write('\x00\x01' * 100)
+        blob.flush()
+        blob.seek(0)
         employee.file = blob
+
+        # Get a file
+        content = employee.file
+
+        # Must seek to the begining of the file since sending it seeks to
+        # the end.
+        blob.seek(0)
+
+        # Make sure they match.
+        self.failUnlessEqual(blob.read(), content.read())
+
+        # Overwrite the file
+        blob2 = '\x00\x02' * 100
+        employee.file = blob2
         content2 = employee.file
 
-        self.failUnlessEqual(blob, content2)
+        # Make sure it was overwritten.
+        self.failUnlessEqual(blob2, content2.read())
+
+    def testFileDeletion(self):
+        raise testsuite.SkipTestException('implement file deletion')
+
+        employee = self.POST('employee2.xml', '/api/employees')
+        employee.file = '\x01\x02' * 100
+
+        # Try to delete the file from the server.
+        employee.file.delete()
+        self.failUnless(employee.id in self.server.data.employees.files)
 
 
 class CollectionTest(testsuite.TestCase):
