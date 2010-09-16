@@ -18,6 +18,7 @@ from xobj import xobj
 
 from robj import errors
 from robj.glue import HTTPClient
+from robj.http.request import Response
 
 class ClientTest(testsuite.TestCase):
     def setUp(self):
@@ -119,6 +120,7 @@ class ClientTest(testsuite.TestCase):
         # test ignored error path
         self._client.error_exceptions[404] = None
         response = self._client.do_GET('/foobar')
+        self.failUnless(isinstance(response, Response))
 
     def testNormalizeUri(self):
         path = self._client._client.path
