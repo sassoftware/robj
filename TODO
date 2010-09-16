@@ -10,4 +10,3 @@ TODO
 * Allow consumers of rObj to provide a type map or document class for each URI.
 * Figure out how to make running dir on an instance not fetch all attributes.
 * Implement handling of HTTP redirects.
-
