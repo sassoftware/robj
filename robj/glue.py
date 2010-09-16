@@ -94,9 +94,9 @@ class HTTPClient(object):
             # If this is not an xobj and it is a string, but it doesn't look
             # like an xml document or doc is a file object, assume that the
             # client meant to upload this document to the server.
-            if (meta is None and isinstance(doc, file) or
+            if (meta is None and (isinstance(doc, file) or
                 (isinstance(doc, types.StringTypes) and
-                 not doc.startswith('<?xml'))):
+                 not doc.startswith('<?xml')))):
                 return doc
 
             # Raise an exception if we can't figure out the tag.
