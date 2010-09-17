@@ -194,6 +194,33 @@ class rObjProxyTest(testsuite.TestCase):
         employee.file.delete()
         self.failUnless(employee.id in self.server.data.employees.files)
 
+    def testSettingDictionaryAttributes(self):
+        # Start with an employee that we can then attach a file to.
+        employee = self.POST('employee3.xml', '/api/employees')
+
+        address = dict(
+            street='1234 Foo Ct.',
+            city='Bar Town',
+            state='Baz',
+            zipcode='12345',
+        )
+
+        employee.address = address
+
+        self.failUnlessEqual(employee.address.street, address['street'])
+        self.failUnlessEqual(employee.address.city, address['city'])
+        self.failUnlessEqual(employee.address.state, address['state'])
+        self.failUnlessEqual(employee.address.zipcode, address['zipcode'])
+
+        employee.persist()
+
+        model = self.getModel(employee.id)
+
+        self.failUnlessEqual(employee.address.street, model.address.street)
+        self.failUnlessEqual(employee.address.city, model.address.city)
+        self.failUnlessEqual(employee.address.state, model.address.state)
+        self.failUnlessEqual(employee.address.zipcode, model.address.zipcode)
+
 
 class CollectionTest(testsuite.TestCase):
     def setUp(self):
