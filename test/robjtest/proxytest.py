@@ -341,3 +341,36 @@ class CollectionTest(testsuite.TestCase):
         employee2 = employees[0]
 
         self.failUnlessEqual(employee2.address.zipcode, '90210')
+
+    def testDictionaryAppend(self):
+        employees = self.api.employees
+        employees.append(self.getArchiveModel('employee1.xml'))
+        employees.refresh()
+
+        employee = dict(
+            name = 'Bob',
+            address = dict(
+                street = 'foobar',
+                city = 'foobar',
+                state = 'foobar',
+                zipcode = '12345',
+            ),
+            phone = '(919) 555-1234',
+        )
+
+        employees.append(employee)
+
+        model = employees[-1]
+
+        self.failUnlessEqual(model.name,
+            employee['name'])
+        self.failUnlessEqual(model.address.street,
+            employee['address']['street'])
+        self.failUnlessEqual(model.address.city,
+            employee['address']['city'])
+        self.failUnlessEqual(model.address.state,
+            employee['address']['state'])
+        self.failUnlessEqual(model.address.zipcode,
+            employee['address']['zipcode'])
+        self.failUnlessEqual(model.phone,
+            employee['phone'])
