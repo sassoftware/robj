@@ -64,15 +64,15 @@ class Connection(object):
         self._conn.connect()
         #self._conn.set_debuglevel(1)
 
-        log.info('connected to %s://%s' % (self._scheme, self._hostport))
+        clog.debug('connected to %s://%s' % (self._scheme, self._hostport))
 
         return self._conn
 
     def _request(self, method, path, content=None, headers=None):
-        clog.info('CONNECTION(%s) SCHEME(%s) HOSTPORT(%s) METHOD(%s) PATH(%s)' %
+        clog.debug('CONNECTION(%s) SCHEME(%s) HOSTPORT(%s) METHOD(%s) PATH(%s)' %
             (id(self), self._scheme, self._hostport, method, path))
-        #clog.debug('CONNECTION(%s) CONTENT %s' % (id(self), content))
-        #clog.debug('CONNECTION(%s) HEADERS %s' % (id(self), headers))
+        clog.debug('CONNECTION(%s) CONTENT %s' % (id(self), content))
+        clog.debug('CONNECTION(%s) HEADERS %s' % (id(self), headers))
 
         # If the content stream is a file like object that implements flush,
         # make sure the contents are flushed to disk. This is important to how
