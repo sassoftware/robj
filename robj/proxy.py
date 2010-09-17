@@ -161,7 +161,7 @@ class rObjProxy(object):
 
     def _setObj(self, obj, name, value):
         if hasattr(obj, 'href'):
-            self._client.do_POST(obj.href, value)
+            self._client.do_PUT(obj.href, value)
         elif hasattr(obj, 'id'):
             raise RemoteInstanceOverwriteError(
                 name=name, uri=self._uri, id=obj.id)
