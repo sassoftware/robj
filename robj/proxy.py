@@ -260,6 +260,10 @@ class rObjProxy(object):
         return l
 
     def append(self, value, post=True):
+        # Convert dictionaries to XObj instances.
+        if isinstance(value, dict):
+            value = xutil.XObjify(value, self._childTag)
+
         if post:
             obj = self._client.do_POST(self._uri, value)
             self._collection.append(obj._root)
