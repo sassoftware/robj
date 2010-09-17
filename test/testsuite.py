@@ -67,6 +67,11 @@ class TestCase(testhelp.TestCase):
         response = self.getResponse(uri)
         return response.message
 
+    def run(self, results=None):
+        if results is not None:
+            self._debug_flag = results.debug
+        return testhelp.TestCase.run(self, results)
+
     def setUp(self):
         testhelp.TestCase.setUp(self)
 
@@ -74,7 +79,8 @@ class TestCase(testhelp.TestCase):
 
         import testserver
         ports = testhelp.findPorts(num=1, closeSockets=True)
-        self.server = testserver.ThreadServer(port=ports[0])
+        self.server = testserver.ThreadServer(port=ports[0],
+            debug=self._debug_flag)
 
     def tearDown(self):
         self.server.shutdown()
