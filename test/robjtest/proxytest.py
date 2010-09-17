@@ -194,6 +194,33 @@ class rObjProxyTest(testsuite.TestCase):
         employee.file.delete()
         self.failUnless(employee.id in self.server.data.employees.files)
 
+    def testSettingDictionaryAttributes(self):
+        # Start with an employee that we can then attach a file to.
+        employee = self.POST('employee3.xml', '/api/employees')
+
+        address = dict(
+            street='1234 Foo Ct.',
+            city='Bar Town',
+            state='Baz',
+            zipcode='12345',
+        )
+
+        employee.address = address
+
+        self.failUnlessEqual(employee.address.street, address['street'])
+        self.failUnlessEqual(employee.address.city, address['city'])
+        self.failUnlessEqual(employee.address.state, address['state'])
+        self.failUnlessEqual(employee.address.zipcode, address['zipcode'])
+
+        employee.persist()
+
+        model = self.getModel(employee.id)
+
+        self.failUnlessEqual(employee.address.street, model.address.street)
+        self.failUnlessEqual(employee.address.city, model.address.city)
+        self.failUnlessEqual(employee.address.state, model.address.state)
+        self.failUnlessEqual(employee.address.zipcode, model.address.zipcode)
+
 
 class CollectionTest(testsuite.TestCase):
     def setUp(self):
@@ -314,3 +341,36 @@ class CollectionTest(testsuite.TestCase):
         employee2 = employees[0]
 
         self.failUnlessEqual(employee2.address.zipcode, '90210')
+
+    def testDictionaryAppend(self):
+        employees = self.api.employees
+        employees.append(self.getArchiveModel('employee1.xml'))
+        employees.refresh()
+
+        employee = dict(
+            name = 'Bob',
+            address = dict(
+                street = 'foobar',
+                city = 'foobar',
+                state = 'foobar',
+                zipcode = '12345',
+            ),
+            phone = '(919) 555-1234',
+        )
+
+        employees.append(employee)
+
+        model = employees[-1]
+
+        self.failUnlessEqual(model.name,
+            employee['name'])
+        self.failUnlessEqual(model.address.street,
+            employee['address']['street'])
+        self.failUnlessEqual(model.address.city,
+            employee['address']['city'])
+        self.failUnlessEqual(model.address.state,
+            employee['address']['state'])
+        self.failUnlessEqual(model.address.zipcode,
+            employee['address']['zipcode'])
+        self.failUnlessEqual(model.phone,
+            employee['phone'])

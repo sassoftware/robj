@@ -16,6 +16,7 @@ Module for implementing rObj classes.
 
 from threading import RLock
 
+from robj.lib import xutil
 from robj.errors import ExternalUriError
 from robj.errors import RemoteInstanceOverwriteError
 
@@ -182,6 +183,10 @@ class rObjProxy(object):
 
     def __setattr__(self, name, value):
         if not name.startswith('_'):
+            # Convert dictionaries to XObj instances.
+            if isinstance(value, dict):
+                value = xutil.XObjify(value, name)
+
             self._dl.acquire()
             if hasattr(self._root, name):
                 val = getattr(self._root, name)
@@ -219,6 +224,10 @@ class rObjProxy(object):
             raise RemoteInstanceOverwriteError(name=idx, uri=self._uri,
                 id=hasattr(val, 'id') and val.id or val.href)
 
+        # Convert dictionaries to XObj instances.
+        if isinstance(value, dict):
+            value = xutil.XObjify(value, self._childTag)
+
         self._collection[idx] = value
         self._dl.release()
 
@@ -251,6 +260,20 @@ class rObjProxy(object):
         return l
 
     def append(self, value, post=True):
+        """
+        Append a value to a collection.
+        @param value: Object to append to the collection.
+        @type value: xobj.XObj, str, unicode, or dict
+        @param post: Optional argument to avoid POSTing the value at the time
+                     that it is appended. If this is set to False the collection
+                     must be later persisted. (default: True)
+        @type post: boolean
+        """
+
+        # Convert dictionaries to XObj instances.
+        if isinstance(value, dict):
+            value = xutil.XObjify(value, self._childTag)
+
         if post:
             obj = self._client.do_POST(self._uri, value)
             self._collection.append(obj._root)

@@ -11,6 +11,7 @@
 #
 
 import os
+import logging
 from threading import Thread
 from BaseHTTPServer import HTTPServer
 from BaseHTTPServer import BaseHTTPRequestHandler
@@ -18,6 +19,8 @@ from BaseHTTPServer import BaseHTTPRequestHandler
 from testserver import models
 from testserver.datastore import DataStore
 from testserver.controllers import controllers
+
+log = logging.getLogger('robj.test.testserver')
 
 class RESTServer(HTTPServer):
     """
@@ -45,10 +48,19 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
     for rObj.
     """
 
+    debug = False
     server_version = 'REST/0.1'
 
     def log_exception(self, e):
         self.log_message('an exception has occured: %s', (e, ))
+
+    def log_message(self, format, *args):
+        if self.debug:
+            log.info(format, *args)
+
+    def log_error(self, format, *args):
+        if self.debug:
+            log.error(format, *args)
 
     def _handle_request(self):
         """
@@ -95,13 +107,14 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
 
 
 def StartServer(port=8080, fork=True, handlerClass=RESTRequestHandler,
-    serverClass=RESTServer):
+    serverClass=RESTServer, debug=True):
     """
     Start a REST Server on the given port.
     """
 
     server_address = ('', port)
 
+    handlerClass.debug = debug
     server = serverClass(server_address, handlerClass)
 
     sn = server.socket.getsockname()
@@ -118,7 +131,7 @@ def StartServer(port=8080, fork=True, handlerClass=RESTRequestHandler,
 
 
 def ThreadServer(port=8080, handlerClass=RESTRequestHandler,
-    serverClass=RESTServer):
+    serverClass=RESTServer, debug=False):
 
     class Server(Thread, serverClass):
         def __init__(self, server_address, handlerClass):
@@ -130,11 +143,13 @@ def ThreadServer(port=8080, handlerClass=RESTRequestHandler,
         def run(self):
             self.serve_forever()
 
+    handlerClass.debug = debug
+
     server_address = ('', port)
     server = Server(server_address, handlerClass)
 
     sn = server.socket.getsockname()
-    print 'starting server on %s port %s' % (sn[0], sn[1])
+    log.debug('starting server on %s port %s' % (sn[0], sn[1]))
 
     server.start()
 
