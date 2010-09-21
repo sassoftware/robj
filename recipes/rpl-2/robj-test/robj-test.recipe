@@ -12,8 +12,8 @@
 
 loadInstalled('python')
 loadSuperClass('testpackage=testbits.rb.rpath.com@rpl:1')
-class Robj(TestPackageRecipe):
-    name = 'robj'
+class RobjTest(TestPackageRecipe):
+    name = 'robj-test'
     version = '0'
 
     buildRequires = ['make:runtime', 'procps:runtime', 'util-linux:runtime',
