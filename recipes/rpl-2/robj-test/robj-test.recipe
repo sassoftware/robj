@@ -16,7 +16,7 @@ class RobjTest(TestPackageRecipe):
     name = 'robj-test'
     version = '0'
 
-    buildRequires = ['make:runtime', 'procps:runtime', 'util-linux:runtime',
+    buildRequires = ['robj', 'make:runtime', 'procps:runtime', 'util-linux:runtime',
                      'lxml:python', 'xobj:python', 'testutils:runtime',
                      'testutils:python',]
 
