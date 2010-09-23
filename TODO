@@ -10,3 +10,8 @@ TODO
 * Allow consumers of rObj to provide a type map or document class for each URI.
 * Figure out how to make running dir on an instance not fetch all attributes.
 * Implement handling of HTTP redirects.
+* Provide a way out when rObj doesn't do the right thing.
+* Add support for Cookie based authentication, in particular OAuth.
+* Add support for json data in addition to xml.
+* Add download callbacks (maybe just for file downloads).
+* Add redirect and possibly error handling callbacks.
