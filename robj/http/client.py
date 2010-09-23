@@ -14,6 +14,7 @@
 Basic REST HTTP client implementation.
 """
 
+import types
 import base64
 import urllib
 import urlparse
@@ -84,7 +85,9 @@ class Client(object):
         uri = uri.lstrip('/')
         path = '/'.join((self._path, uri))
 
-        if isinstance(content, file):
+        if (isinstance(content, file) or
+            (isinstance(content, types.StringTypes) and
+             not content.startswith('<?xml'))):
             headers = {'Content-type': 'application/octet-stream', }
         else:
             headers = {'Content-type': 'application/xml', }
