@@ -122,3 +122,19 @@ def isXML(content):
             return True
 
     return False
+
+def getContentType(content):
+    """
+    Figure out the content type of a given object.
+    """
+
+    xml = 'application/xml'
+
+    if isXML(content):
+        return xml
+    elif content == '':
+        return xml
+    elif content is None:
+        return xml
+    else:
+        return 'application/octet-stream'
