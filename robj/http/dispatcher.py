@@ -71,7 +71,7 @@ class RequestWorker(Thread):
         Process one client request.
         """
 
-        log.debug('%s: processing request' % self.name)
+        log.debug('%s: processing request' % self.getName())
 
         # Get a connection for the request.
         conn = self._getConn(req)
@@ -79,7 +79,7 @@ class RequestWorker(Thread):
         # If the connection limit has been hit and we don't have a
         # connection for the request, put it back on the request queue.
         if conn is None:
-            log.error('%s: no connection found for request' % self.name)
+            log.error('%s: no connection found for request' % self.getName())
             return req
 
         # Handle the request.
@@ -87,7 +87,7 @@ class RequestWorker(Thread):
             conn.request(req)
         except httplib.BadStatusLine:
             if req.retry:
-                log.warn('%s: retrying' % self.name)
+                log.warn('%s: retrying' % self.getName())
                 return req
             else:
                 raise
