@@ -20,6 +20,7 @@ from threading import RLock
 from xobj import xobj
 
 from robj import errors
+from robj.lib import util
 from robj.proxy import rObjProxy
 from robj.errors import HTTPDeleteError
 from robj.errors import ExternalUriError
@@ -113,7 +114,7 @@ class HTTPClient(object):
             # client meant to upload this document to the server.
             if (meta is None and (isinstance(doc, file) or
                 (isinstance(doc, types.StringTypes) and
-                 not doc.startswith('<?xml')))):
+                 not util.isXML(doc)))):
                 return doc
 
             # Raise an exception if we can't figure out the tag.
@@ -212,12 +213,10 @@ class HTTPClient(object):
         # Make sure the response looks like valid xml, otherwise assume that
         # this is a file download an return the content of the response.
         content = response.content
-        if not content.read(5).startswith('<?xml'):
-            content.seek(0)
+        if not util.isXML(content):
             return content
 
         # Parse XML document.
-        content.seek(0)
         doc = xobj.parsef(content)
         content.close()
 

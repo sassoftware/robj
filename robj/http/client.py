@@ -14,11 +14,11 @@
 Basic REST HTTP client implementation.
 """
 
-import types
 import base64
 import urllib
 import urlparse
 
+from robj.lib import util
 from robj.http.request import Request
 from robj.http.dispatcher import RequestDispatcher
 
@@ -85,12 +85,7 @@ class Client(object):
         uri = uri.lstrip('/')
         path = '/'.join((self._path, uri))
 
-        if (isinstance(content, file) or
-            (isinstance(content, types.StringTypes) and
-             not content.startswith('<?xml'))):
-            headers = {'Content-type': 'application/octet-stream', }
-        else:
-            headers = {'Content-type': 'application/xml', }
+        headers = {'Content-type': util.getContentType(content), }
 
         req = Request(method, path, self._scheme, self._hostport,
             content=content, headers=self._getHeaders(headers=headers))
