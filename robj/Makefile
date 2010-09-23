@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2010 rPath, Inc.
+# Copyright (c) 2008-2009 rPath, Inc.
 #
 # This program is distributed under the terms of the MIT License as found 
 # in a file called LICENSE. If it is not present, the license
@@ -10,34 +10,19 @@
 # or fitness for a particular purpose. See the MIT License for full details.
 #
 
-SUBDIRS = robj test
+python_files = $(wildcard *.py)
+override PYDEST = /robj
 
 
-build: default-build
+build: default-build python-build
 
-install: default-install
+install: default-install python-install
 
-clean: default-clean
+clean: default-clean python-clean
 
-test: default-test
-
-forcetag:
-	hg tag -f robj-$(VERSION)
-
-tag:
-	hg tag robj-$(VERSION)
+test: default-test python-test
 
 
-
-dist: archive
-
-archive-snapshot:
-	hg archive --exclude .hgignore -t tbz2 robj-$$(hg id -i).tar.bz2
-
-archive:
-	hg archive --exclude .hgignore -t tbz2 robj-$(VERSION).tar.bz2
-
-
-export TOPDIR=$(shell pwd)
+export TOPDIR=$(shell pwd)/..
 include $(TOPDIR)/Make.rules
 include $(TOPDIR)/Make.defs
