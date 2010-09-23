@@ -16,6 +16,7 @@ Module for miscellaneous utility functions.
 
 import os
 import time
+import types
 import select
 import tempfile
 
@@ -97,3 +98,27 @@ def mktemp(suffix='', prefix='tmp', dir=None, unlink=True, mode='w+b'):
     if unlink:
         os.unlink(fname)
     return fh
+
+def isXML(content):
+    """
+    Figure out if content is XML.
+    @param content a string or file object (must be seekable)
+    @type content str, unicode, or file 
+    @rtype boolean
+    """
+
+    testStr = '<?xml'
+
+    # File case.
+    if isinstance(content, file):
+        xml = content.read(len(testStr))
+        content.seek(0)
+        if testStr == xml:
+            return True
+
+    # String case.
+    elif isinstance(content, types.StringTypes):
+        if content.starswith(testStr):
+            return True
+
+    return False
