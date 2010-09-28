@@ -112,8 +112,32 @@ class AbstractController(object):
     def do_DELETE(self): return Response(code=501)
 
     def _getinput(self):
-        length = int(self.handler.headers.getheader('content-length'))
-        return self.handler.rfile.read(length)
+        te = self.handler.headers.getheader('transfer-encoding', None)
+        if not te or te.lower() != 'chunked':
+            length = int(self.handler.headers.getheader('content-length'))
+            return self.handler.rfile.read(length)
+
+        input = ''
+        chunkSize = None
+        while chunkSize != 0:
+            chunkSize = self._getChunkSize()
+            input += self.handler.rfile.read(chunkSize)
+
+            # read the line feed
+            self.handler.rfile.read(2)
+
+        return input
+
+    def _getChunkSize(self):
+        size = ''
+        data = None
+        last = None
+        while not data or not (last == '\r' and data == '\n'):
+            last = data
+            data = self.handler.rfile.read(1)
+            size += data
+
+        return int(size, 16)
 
 
 class AbstractCollectionController(AbstractController):
