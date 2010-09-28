@@ -118,7 +118,7 @@ def isXML(content):
 
     # String case.
     elif isinstance(content, types.StringTypes):
-        if content.starswith(testStr):
+        if content.startswith(testStr):
             return True
 
     return False

@@ -31,7 +31,7 @@ from robj.lib.log import setupLogging as _setupLogging
 __ALL__ = ['rObj', 'connect', 'open', ]
 
 def rObj(uri, headers=None, maxClients=None, maxConnections=None,
-    logging=True):
+        logging=False):
     """
     @param uri: URI for connectiong to the root of the desired web service. This
                 may contain user information and must be http or https.
