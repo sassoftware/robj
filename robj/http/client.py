@@ -32,7 +32,7 @@ class Client(object):
     @type headers: dict
     @param maxClients: The maximum number of workers that will be created to
                        handle requets. Works are created as needed, rather than
-                       being preallocated. (default: 10)
+                       being preallocated. (default: 1)
     @type maxClients: int
     @param maxConnections: The maximum number of connections each client thread
                            should cache. Client threads only cache one

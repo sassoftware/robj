@@ -101,7 +101,7 @@ class RequestDispatcher(object):
     Dispatch requests to a pool of HTTP clients.
     @param maxClients: The maximum number of workers that will be created to
                        handle requets. Works are created as needed, rather than
-                       being preallocated. (default: 10)
+                       being preallocated. (default: 1)
     @type maxClients: int
     @param maxConnections: The maximum number of connections each client thread
                            should cache. Client threads only cache one
@@ -112,9 +112,9 @@ class RequestDispatcher(object):
 
     _workerClass = RequestWorker
 
-    def __init__(self, maxClients=10, maxConnections=2):
+    def __init__(self, maxClients=None, maxConnections=None):
         if maxClients is None:
-            maxClients = 10
+            maxClients = 1
         if maxConnections is None:
             maxConnections = 2
 
