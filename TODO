@@ -15,3 +15,6 @@ TODO
 * Add support for json data in addition to xml.
 * Add download callbacks (maybe just for file downloads).
 * Add redirect and possibly error handling callbacks.
+* Maybe switch to deffered fetching of resources. Particular use case is wanting
+  to delete all items from a collection one at a time. This doesn't require
+  fetching each instance, just calling do_DELETE on the instance's uri.
