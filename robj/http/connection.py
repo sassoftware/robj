@@ -15,7 +15,8 @@ Generic HTTP connection handling.
 """
 
 import logging
-import httplib
+
+from robj.lib import fixedhttplib as httplib
 
 clog = logging.getLogger('robj.http.traffic')
 log = logging.getLogger('robj.http.connection')
