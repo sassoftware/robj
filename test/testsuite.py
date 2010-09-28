@@ -82,8 +82,21 @@ class TestCase(testhelp.TestCase):
         self.server = testserver.ThreadServer(port=ports[0],
             debug=self._debug_flag)
 
+        import logging
+        log = logging.getLogger('robj.http.traffic')
+        self._old_log_level = log.level
+
+        if self._debug_flag:
+            log.setLevel(logging.DEBUG)
+
     def tearDown(self):
         self.server.shutdown()
+
+        import logging
+        log = logging.getLogger('robj.http.traffic')
+        log.setLevel(self._old_log_level)
+
+        testhelp.TestCase.tearDown(self)
 
 
 if __name__ == '__main__':
