@@ -25,10 +25,11 @@ Example usage:
 >>> print products[0].name
 """
 
+from robj.lib.httputil import HTTPData
 from robj.glue import HTTPClient as _HTTPClient
 from robj.lib.log import setupLogging as _setupLogging
 
-__ALL__ = ['rObj', 'connect', 'open', ]
+__ALL__ = ['rObj', 'connect', 'open', 'HTTPData', ]
 
 def rObj(uri, headers=None, maxClients=None, maxConnections=None,
         logging=False):

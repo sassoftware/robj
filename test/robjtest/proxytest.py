@@ -14,9 +14,12 @@
 import testsuite
 testsuite.setup()
 
+from StringIO import StringIO
+
 from xobj import xobj
 
 from robj.lib import util
+from robj.lib import httputil
 from robj.glue import HTTPClient
 from robj.proxy import rObjProxy
 
@@ -183,6 +186,18 @@ class rObjProxyTest(testsuite.TestCase):
 
         # Make sure it was overwritten.
         self.failUnlessEqual(blob2, content2.read())
+
+    def testHTTPDataFiles(self):
+        employee = self.POST('employee2.xml', '/api/employees')
+
+        sio = StringIO('\x00\x01' * 100)
+        content = httputil.HTTPData(sio, chunked=True, size=200)
+        employee.file = content
+
+        sio.seek(0)
+        content = httputil.HTTPData(sio, chunked=False, size=200)
+        employee.file = content
+
 
     def testFileDeletion(self):
         raise testsuite.SkipTestException('implement file deletion')

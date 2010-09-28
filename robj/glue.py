@@ -21,6 +21,7 @@ from xobj import xobj
 
 from robj import errors
 from robj.lib import util
+from robj.lib import httputil
 from robj.proxy import rObjProxy
 from robj.errors import HTTPDeleteError
 from robj.errors import ExternalUriError
@@ -114,7 +115,7 @@ class HTTPClient(object):
             # client meant to upload this document to the server.
             if (meta is None and (isinstance(doc, file) or
                 (isinstance(doc, types.StringTypes) and
-                 not util.isXML(doc)))):
+                 not util.isXML(doc)) or httputil.isHTTPData(doc))):
                 return doc
 
             # Raise an exception if we can't figure out the tag.
@@ -163,6 +164,7 @@ class HTTPClient(object):
         if method == 'GET' and uri in self.cache and cache:
             return self.cache[uri]
 
+        xml = None
         rawdoc = False
         if method in ('POST', 'PUT', ):
             # Make sure there is a document for PUT and POST requests.
@@ -175,6 +177,10 @@ class HTTPClient(object):
             args = (uri, xml)
         else:
             args = (uri, )
+
+        # Allow custom http data to override method.
+        if xml and httputil.isHTTPData(xml) and xml.method:
+            method = xml.method
 
         # Call client method
         func = getattr(self._client, 'do_%s' % method)

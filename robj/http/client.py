@@ -85,7 +85,17 @@ class Client(object):
         uri = uri.lstrip('/')
         path = '/'.join((self._path, uri))
 
-        headers = {'Content-type': util.getContentType(content), }
+        headers = self._getHeaders(headers={
+            'Content-type': util.getContentType(content),
+        })
+
+        # If the content object defines a iterheaders method, as
+        # httputil.HTTPData does, allow the content headers to override any
+        # other headers. NOTE: The content object must define its own content
+        # type if you want something other than application/octet-stream.
+        if hasattr(content, 'iterheaders'):
+            for key, val in content.iterheaders():
+                headers[key] = val
 
         req = Request(method, path, self._scheme, self._hostport,
             content=content, headers=self._getHeaders(headers=headers))
