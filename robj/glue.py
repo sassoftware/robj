@@ -229,7 +229,7 @@ class HTTPClient(object):
         # This is here to handle appending to collections, where the resource
         # you get back is the new instance, not the collection itself.
         if 'id' in root._xobj.attributes:
-            uri = root.id
+            uri = self._normalize_uri(root.id)
 
         # Cache response and return rObjProxy instance.
         return self.cache(self, uri, root, parent=parent)

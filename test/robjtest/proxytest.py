@@ -374,3 +374,26 @@ class CollectionTest(testsuite.TestCase):
             employee['address']['zipcode'])
         self.failUnlessEqual(model.phone,
             employee['phone'])
+
+    def testCollectionCache(self):
+        employees = self.api.employees
+
+        preappend_xobj = employees._root
+        employees.append(self.getArchiveModel('employee1.xml'))
+        postappend_xobj = employees._root
+
+        # Make sure that the colleciton is not refreshed from the server as a
+        # side affect of an append operation.
+        self.failUnless(preappend_xobj is postappend_xobj)
+
+        # Return to a known good state
+        employees.refresh()
+
+        # Test the same thing, but this time access the collection from
+        # self.api.employees each time.
+        preappend_xobj = self.api.employees._root
+        self.api.employees.append(self.getArchiveModel('employee2.xml'))
+        postappend_xobj = self.api.employees._root
+
+        # Make sure the collection was not refetched
+        self.failUnless(preappend_xobj is postappend_xobj)
