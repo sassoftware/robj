@@ -25,7 +25,7 @@ Example usage:
 >>> print products[0].name
 """
 
-from robj.lib.httputil import HTTPData
+from robj.lib.httputil import HTTPData  # pyflakes=ignore
 from robj.glue import HTTPClient as _HTTPClient
 from robj.lib.log import setupLogging as _setupLogging
 

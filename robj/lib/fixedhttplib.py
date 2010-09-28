@@ -32,7 +32,7 @@ class _Py26Send(object):
             thelen=None
             try:
                 thelen=str(len(body))
-            except TypeError, te:
+            except TypeError, te:  # pyflakes=ignore
                 # If this is a file-like object, try to
                 # fstat its file descriptor
                 import os
