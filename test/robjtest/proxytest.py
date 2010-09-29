@@ -198,6 +198,9 @@ class rObjProxyTest(testsuite.TestCase):
         content = httputil.HTTPData(sio, chunked=False, size=200)
         employee.file = content
 
+        stringData = '\x00\x01' * 100
+        content = httputil.HTTPData(stringData, size=200)
+        employee.file = content
 
     def testFileDeletion(self):
         raise testsuite.SkipTestException('implement file deletion')
