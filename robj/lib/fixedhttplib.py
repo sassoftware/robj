@@ -8,7 +8,8 @@ import socket
 import httplib
 from array import array
 
-__ALL__ = ('HTTPConnection', 'HTTPSConnection', )
+__all__ = ('HTTPConnection', 'HTTPSConnection', )
+
 
 class _Py26Send(object):
     """

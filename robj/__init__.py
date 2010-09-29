@@ -29,7 +29,8 @@ from robj.lib.httputil import HTTPData  # pyflakes=ignore
 from robj.glue import HTTPClient as _HTTPClient
 from robj.lib.log import setupLogging as _setupLogging
 
-__ALL__ = ['rObj', 'connect', 'open', 'HTTPData', ]
+__all__ = ['rObj', 'connect', 'open', 'HTTPData', ]
+
 
 def rObj(uri, headers=None, maxClients=None, maxConnections=None,
         logging=False, maxRedirects=None):
