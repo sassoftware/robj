@@ -103,10 +103,50 @@ class ClientTest(testsuite.TestCase):
         self.failUnlessEqual(response2.status, 404)
 
     def testRedirect(self):
-        self.failUnlessRaises(NotImplementedError,
-            self._client._handle_redirect, None, None, None)
+        def testFail(eclass, path):
+            self.failUnlessRaises(eclass, self._client.do_GET, path)
+        def clearCache():
+            self._client.cache.clear()
+            self._client._redirects = {}
 
-        raise testsuite.SkipTestException, 'Redirects are not yet implemented'
+        error = errors.HTTPUnhandledRedirectError
+        testFail(error, '/redirects/300')
+        testFail(error, '/redirects/305')
+
+        obj = self._client.do_GET('/redirects/301')
+        self.failUnless('/redirects/301' in self._client._redirects)
+        self.failUnless(obj in self._client.cache.values())
+        self.failUnlessEqual(obj._uri,
+            self._client._redirects['/redirects/301'])
+
+        clearCache()
+
+        obj = self._client.do_GET('/redirects/302')
+        self.failIf('/redirects/302' in self._client._redirects)
+        self.failIf(obj in self._client.cache.values())
+        self.failUnlessEqual(obj._uri, '/redirects/302')
+
+        clearCache()
+
+        obj = self._client.do_GET('/redirects/303')
+        self.failIf('/redirects/303' in self._client._redirects)
+        self.failUnless(obj in self._client.cache.values())
+        self.failUnlessEqual(obj._uri, '/employees')
+
+        clearCache()
+
+        obj = self._client.do_GET('/redirects/304')
+        self.failIf('/redirects/304' in self._client._redirects)
+        self.failUnless(obj in self._client.cache.values())
+        self.failUnlessEqual(obj._uri, '/redirects/304')
+
+        clearCache()
+
+        self.failUnlessRaises(errors.HTTPMaxRedirectReachedError,
+            self._client.do_GET, '/redirects/loop')
+
+        self.failUnlessRaises(errors.HTTPMaxRedirectReachedError,
+            self._client.do_GET, '/redirects/1')
 
     def testErrors(self):
         # test delete error path

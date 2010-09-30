@@ -23,10 +23,12 @@ from robj import errors
 from robj.lib import util
 from robj.lib import httputil
 from robj.proxy import rObjProxy
+from robj.http import HTTPClient as _HTTPClient
+
 from robj.errors import HTTPDeleteError
 from robj.errors import ExternalUriError
 from robj.errors import SerializationError
-from robj.http import HTTPClient as _HTTPClient
+from robj.errors import HTTPMaxRedirectReachedError
 
 __ALL__ = ('HTTPClient', )
 
@@ -47,9 +49,16 @@ class HTTPClient(object):
                            connection per host. This should only matter if you
                            are talking to multiple hosts. (default: 2)
     @type maxConnections: int
+    @param maxRedirects: The maximum number of redirects that will be followed
+                         before an exception is raised. (default: 10)
+    @type maxRedirects: int
     """
 
     error_exceptions = {
+        300: errors.HTTPUnhandledRedirectError,
+        305: errors.HTTPUnhandledRedirectError,
+        306: errors.HTTPUnhandledRedirectError,
+
         401: errors.HTTPUnauthorizedError,
         403: errors.HTTPForbiddenError,
         404: errors.HTTPNotFoundError,
@@ -66,12 +75,17 @@ class HTTPClient(object):
     }
 
     def __init__(self, baseUri, headers=None, maxClients=None,
-        maxConnections=None):
+        maxConnections=None, maxRedirects=None):
+
+        if maxRedirects is None:
+            maxRedirects = 10
+        self._maxRedirects = maxRedirects
 
         self._client = _HTTPClient(baseUri, headers=headers,
             maxClients=maxClients, maxConnections=maxConnections)
 
         self.cache = InstanceCache()
+        self._redirects = {}
 
     def _normalize_uri(self, uri):
         """
@@ -144,21 +158,76 @@ class HTTPClient(object):
         # response.
         return response
 
-    def _handle_redirect(self, uri, request, response):
+    def _handle_redirect(self, uri, request, response, parent=None,
+        redirectCount=0):
         """
         Handle all redirect conditions. This may include long running jobs
         implemented through a see other (303).
         """
 
-        raise NotImplementedError
+        def handle_request(location, cache=True):
+            return self._handle_request(request.method, location,
+                xdoc=request.content, parent=parent, cache=cache,
+                redirectCount=redirectCount+1)
 
-    def _handle_request(self, method, uri, xdoc=None, parent=None, cache=True):
+        # Raise an exception for any redirect types that are not currently
+        # handled by this method.
+        if response.status in self.error_exceptions:
+            error = self.error_exceptions[response.status]
+            raise error(uri=uri, status=response.status, reason=response.reason,
+                response=response)
+
+        if redirectCount >= self._maxRedirects:
+            raise HTTPMaxRedirectReachedError(uri=uri, status=response.status,
+                reason=response.reason, response=response)
+
+        # Everything from here should have a location header set.
+        location = response.getheader('location')
+
+        # 301: Moved Permanently - Resource has moved permanently and it is
+        # considered safe to cache both the redirect and result.
+        if response.status == 301:
+            self._redirects[uri] = self._normalize_uri(location)
+            return handle_request(location, cache=True)
+
+        # 302: Found - not cachable
+        # 307: Temporary Redirect - not cachable
+        elif response.status in (302, 307):
+            obj = handle_request(location, cache=False)
+            obj._uri = uri
+            return obj
+
+        # 303: See Other - redirect not cacheable, redirected resource cachable.
+        elif response.status == 303:
+            return handle_request(location, cache=True)
+
+        # 304: Not Modified - resource has not changed since the last request,
+        # returned cached instance of location.
+        elif response.status == 304:
+            location = self._normalize_uri(location)
+            if location in self.cache:
+                return self.cache[location]
+            else:
+                obj = handle_request(location, cache=True)
+                obj._uri = uri
+                return obj
+
+        # Everything else must be an error
+        else:
+            raise errors.HTTPUnknownRedirect(uri=uri, status=response.status,
+                reason=response.reason, response=response)
+
+    def _handle_request(self, method, uri, xdoc=None, parent=None, cache=True,
+        redirectCount=0):
         """
         Process all types of requests.
         """
 
         # Normalize the URI.
         uri = self._normalize_uri(uri)
+
+        # Check if this is a permanent redirect
+        uri = self._redirects.get(uri, uri)
 
         # Check the cache before moving on if this is a GET.
         if method == 'GET' and uri in self.cache and cache:
@@ -209,7 +278,8 @@ class HTTPClient(object):
 
         # Handle redirects.
         elif response.status >= 300:
-            return self._handle_redirect(uri, request, response)
+            return self._handle_redirect(uri, request, response, parent=parent,
+                redirectCount=redirectCount)
 
         # If the raw document was sent to the server, this is probably a file
         # upload and the response should not contain an xml document.
@@ -238,7 +308,7 @@ class HTTPClient(object):
             uri = self._normalize_uri(root.id)
 
         # Cache response and return rObjProxy instance.
-        return self.cache(self, uri, root, parent=parent)
+        return self.cache(self, uri, root, parent=parent, cache=cache)
 
     def do_GET(self, *args, **kwargs):
         """
@@ -310,11 +380,10 @@ class InstanceCache(dict):
         if uri:
             self.pop(uri, None)
         else:
-            for element in self:
-                self.pop(element)
+            dict.clear(self)
         self._write_lock.release()
 
-    def cache(self, client, uri, root, parent=None):
+    def cache(self, client, uri, root, parent=None, cache=True):
         """
         Cache the given robj if needed.
         """
@@ -328,7 +397,8 @@ class InstanceCache(dict):
                 robj._reset()
         else:
             robj = rObjProxy(uri, client, root, parent=parent)
-            self[uri] = robj
+            if cache:
+                self[uri] = robj
 
         self._write_lock.release()
         return robj

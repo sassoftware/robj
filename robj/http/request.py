@@ -29,9 +29,16 @@ class Response(object):
         self.reason = resp.reason
         self.length = resp.length
         self.content = util.mktemp()
+        self.headers = resp.getheaders()
 
         util.copyfileobj(resp, self.content)
         self.content.seek(0)
+
+    def getheader(self, name):
+        for header, value in self.headers:
+            if name.lower() == header.lower():
+                return value
+        raise AttributeError, 'header not found: %s' % name
 
 
 class Request(object):

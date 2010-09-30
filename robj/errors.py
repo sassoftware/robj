@@ -163,6 +163,34 @@ class HTTPGatewayTimeoutError(HTTPResponseError):
     """
 
 
+class HTTPRedirectError(HTTPError):
+    """
+    Generic redirect error.
+    """
+
+    _params = ['uri', 'status', 'reason', 'response', ]
+    _template = ('Error processing redirect: uri=%(uri)s, status=%(status)s, '
+        'reason=%(reason)s')
+
+
+class HTTPUnhandledRedirectError(HTTPRedirectError):
+    """
+    Raised when a redirect status code is returned that rObj doesn't know how to
+    deal with.
+    """
+
+class HTTPUnknownRedirectStatusError(HTTPRedirectError):
+    """
+    Raised if the server returns a status code in the 300s that isn't otherwise
+    handled.
+    """
+
+class HTTPMaxRedirectReachedError(HTTPRedirectError):
+    """
+    Raised if the maximum number of redirects is reached or a loop is dicovered.
+    """
+
+
 class GlueError(rObjError):
     """
     Generic glue layer error.

@@ -18,7 +18,11 @@ from testserver import models
 from testserver.datastore import AttrDict
 
 class Response(object):
-    def __init__(self, doc=None, code=200, model=None, tag=None):
+    def __init__(self, doc=None, code=200, model=None, tag=None, headers=None):
+        if not headers:
+            headers = {}
+        self._headers = headers
+
         self._doc = doc
         self.code = code
         self._model = model
@@ -38,6 +42,9 @@ class Response(object):
             return xobj.toxml(self._model, tag)
         else:
             return ''
+
+    def iterheaders(self):
+        return self._headers.iteritems()
 
 
 class ControllerMgr(dict):
@@ -143,6 +150,16 @@ class AbstractController(object):
 class AbstractCollectionController(AbstractController):
     def do_POST(self):
         return self.do_PUT()
+
+
+class RedirectController(AbstractController):
+    __dest__ = ''
+    __code__ = 300
+
+    def redirect(self):
+        return Response(code=self.__code__, headers={'Location': self.__dest__})
+
+    do_PUT = do_POST = do_GET = redirect
 
 
 class NotFoundController(AbstractController):
@@ -357,3 +374,26 @@ class EmployeeProducts(Products):
 
         return Response(code=200, model=model)
 controllers.register(EmployeeProducts)
+
+
+def redirect(source, dest, code):
+    class RedirectControllerFactory(RedirectController):
+        __uri__ = source
+        __dest__ = dest
+        __code__ = code
+    controllers.register(RedirectControllerFactory)
+redirect('/api/redirects/300', '/api/errors/404', 300)
+redirect('/api/redirects/301', '/api/employees', 301)
+redirect('/api/redirects/302', '/api/employees', 302)
+redirect('/api/redirects/303', '/api/employees', 303)
+redirect('/api/redirects/304', '/api/employees', 304)
+redirect('/api/redirects/305', '/api/errors/404', 305)
+redirect('/api/redirects/307', '/api/employees', 307)
+redirect('/api/redirects/loop', '/api/redirects/loop', 301)
+redirect('/api/redirects/1', '/api/redirects/2', 301)
+redirect('/api/redirects/2', '/api/redirects/3', 301)
+redirect('/api/redirects/3', '/api/redirects/4', 301)
+redirect('/api/redirects/4', '/api/redirects/5', 301)
+redirect('/api/redirects/5', '/api/redirects/6', 301)
+redirect('/api/redirects/6', '/api/redirects/7', 301)
+redirect('/api/redirects/7', '/api/redirects/1', 301)

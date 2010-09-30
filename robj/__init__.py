@@ -32,7 +32,7 @@ from robj.lib.log import setupLogging as _setupLogging
 __ALL__ = ['rObj', 'connect', 'open', 'HTTPData', ]
 
 def rObj(uri, headers=None, maxClients=None, maxConnections=None,
-        logging=False):
+        logging=False, maxRedirects=None):
     """
     @param uri: URI for connectiong to the root of the desired web service. This
                 may contain user information and must be http or https.
@@ -48,6 +48,9 @@ def rObj(uri, headers=None, maxClients=None, maxConnections=None,
                            connection per host. This should only matter if you
                            are talking to multiple hosts. (default: 2)
     @type maxConnections: int
+    @param maxRedirects: The maximum number of redirects that will be followed
+                         before an exception is raised. (default: 10)
+    @type maxRedirects: int
     @param logging: Set up a logger.
     @type logging: boolean
     """
@@ -59,7 +62,7 @@ def rObj(uri, headers=None, maxClients=None, maxConnections=None,
 
     # Instantiate the http client.
     client = _HTTPClient(uri, headers=headers, maxClients=maxClients,
-        maxConnections=maxConnections)
+        maxConnections=maxConnections, maxRedirects=maxRedirects)
 
     # Get the root rObj
     robj = client.do_GET('/')

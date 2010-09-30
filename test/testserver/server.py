@@ -87,6 +87,11 @@ class RESTRequestHandler(BaseHTTPRequestHandler):
             self.send_response(response.code)
             self.send_header('Content-type', 'text/xml')
             self.send_header('Content-length', len(response.message))
+
+            # write any headers specified by the response
+            for key, val in response.iterheaders():
+                self.send_header(key, val)
+
             self.end_headers()
 
             self.wfile.write(response.message)
