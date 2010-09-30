@@ -51,8 +51,7 @@ class HTTPData(object):
     def iterheaders(self):
         for k, v in sorted(self.headers.iteritems()):
             yield k, str(v)
-        # Don't send a Content-Length header if chunking
-        if not self.chunked and self.size is not None:
+        if self.size is not None:
             yield 'Content-Length', str(self.size)
         if self.contentType is not None:
             yield 'Content-Type', self.contentType
