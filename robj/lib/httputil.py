@@ -67,7 +67,7 @@ class HTTPData(object):
         if self.chunked:
             # Use chunked coding
             output = ChunkedSender(connection)
-            sent = util.copyfileobj(self.data, output, bufSize=self.bufferSize,
+            util.copyfileobj(self.data, output, bufSize=self.bufferSize,
                     callback=self.callback, rateLimit=self.rateLimit)
             output.close()
         elif self.size is not None:
