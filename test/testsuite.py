@@ -22,7 +22,7 @@ EXCLUDED_PATHS = ['scripts/.*', 'epdb.py', 'stackutil.py', 'test/.*']
 
 def setup():
     pathManager.addExecPath('XOBJ_PATH')
-    robjPath = pathManager.addExecPath('ROBJ_PATH')
+    pathManager.addExecPath('ROBJ_PATH')
 
     robjTestPath = pathManager.addExecPath('ROBJ_TEST_PATH')
     pathManager.addExecPath('TEST_PATH', path=robjTestPath)
@@ -91,7 +91,9 @@ class TestCase(testhelp.TestCase):
             log.setLevel(logging.DEBUG)
 
     def tearDown(self):
-        self.server.shutdown()
+        # On python 2.6 we can shutdown the socket server
+        if hasattr(self.server, 'shutdown'):
+            self.server.shutdown()
 
         import logging
         log = logging.getLogger('robj.http.traffic')

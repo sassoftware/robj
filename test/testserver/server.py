@@ -143,7 +143,7 @@ def ThreadServer(port=8080, handlerClass=RESTRequestHandler,
             Thread.__init__(self)
             serverClass.__init__(self, server_address, handlerClass)
 
-            self.daemon = True
+            self.setDaemon(True)
 
         def run(self):
             self.serve_forever()
