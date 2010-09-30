@@ -10,7 +10,7 @@
 # or fitness for a particular purpose. See the MIT License for full details.
 #
 
-SUBDIRS=lib http
+SUBDIRS=
 
 python_files = $(wildcard *.py)
 
@@ -22,6 +22,6 @@ install: default-install python-install
 
 clean: default-clean python-clean
 
-export TOPDIR=$(shell pwd)/..
+export TOPDIR=$(shell pwd)/../..
 include $(TOPDIR)/Make.rules
 include $(TOPDIR)/Make.defs
