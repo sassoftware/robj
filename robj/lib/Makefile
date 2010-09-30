@@ -13,6 +13,7 @@
 SUBDIRS=
 
 python_files = $(wildcard *.py)
+override PYDEST=/robj/lib
 
 subdirs: default-subdirs
 
@@ -21,6 +22,8 @@ build: default-build python-build
 install: default-install python-install
 
 clean: default-clean python-clean
+
+test: default-test python-test
 
 export TOPDIR=$(shell pwd)/../..
 include $(TOPDIR)/Make.rules

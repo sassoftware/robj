@@ -14,13 +14,15 @@ SUBDIRS=lib http
 
 python_files = $(wildcard *.py)
 
-subdirs: default-subdirs
+override PYDEST=/robj
 
 build: default-build python-build
 
 install: default-install python-install
 
 clean: default-clean python-clean
+
+test: default-test python-test
 
 export TOPDIR=$(shell pwd)/..
 include $(TOPDIR)/Make.rules
