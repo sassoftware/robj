@@ -30,7 +30,8 @@ from robj.errors import ExternalUriError
 from robj.errors import SerializationError
 from robj.errors import HTTPMaxRedirectReachedError
 
-__ALL__ = ('HTTPClient', )
+__all__ = ('HTTPClient', )
+
 
 class HTTPClient(object):
     """
