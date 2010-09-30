@@ -24,9 +24,10 @@ def setup():
     pathManager.addExecPath('XOBJ_PATH')
     robjPath = pathManager.addExecPath('ROBJ_PATH')
 
-    pathManager.addResourcePath('TEST_PATH', os.path.join(robjPath, 'test'))
+    robjTestPath = pathManager.addExecPath('ROBJ_TEST_PATH')
+    pathManager.addExecPath('TEST_PATH', path=robjTestPath)
     pathManager.addResourcePath('ROBJ_ARCHIVE_PATH',
-        path=os.path.join(robjPath, 'test', 'archive'))
+        path=os.path.join(robjTestPath, 'archive'))
 
 def main(argv=None, individual=True):
     if argv is None:
