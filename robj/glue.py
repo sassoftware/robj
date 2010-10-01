@@ -395,6 +395,9 @@ class InstanceCache(dict):
         Cache the given robj if needed.
         """
 
+        # Make sure that all cached URIs are normalized.
+        uri = client._normalize_uri(uri)
+
         self._write_lock.acquire()
 
         if uri in self:
