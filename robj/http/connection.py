@@ -72,7 +72,7 @@ class Connection(object):
     def _request(self, method, path, content=None, headers=None):
         clog.debug('CONNECTION(%s) SCHEME(%s) HOSTPORT(%s) METHOD(%s) PATH(%s)' %
             (id(self), self._scheme, self._hostport, method, path))
-        if content and headers.get('Content-type') == 'application/xml':
+        if content and headers.get('Content-Type') == 'application/xml':
             clog.debug('CONNECTION(%s) CONTENT %s' % (id(self), content))
         clog.debug('CONNECTION(%s) HEADERS %s' % (id(self), headers))
 

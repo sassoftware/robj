@@ -86,7 +86,7 @@ class Client(object):
         path = '/'.join((self._path, uri))
 
         headers = self._getHeaders(headers={
-            'Content-type': util.getContentType(content),
+            'Content-Type': util.getContentType(content),
         })
 
         # If the content object defines a iterheaders method, as
