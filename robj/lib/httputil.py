@@ -51,8 +51,7 @@ class HTTPData(object):
     def iterheaders(self):
         for k, v in sorted(self.headers.iteritems()):
             yield k, str(v)
-        # Don't send a Content-Length header if chunking
-        if not self.chunked and self.size is not None:
+        if self.size is not None:
             yield 'Content-Length', str(self.size)
         if self.contentType is not None:
             yield 'Content-Type', self.contentType
@@ -65,36 +64,37 @@ class HTTPData(object):
             connection.send(self.data)
             return
 
-        if not self.chunked:
+        if self.chunked:
+            # Use chunked coding
+            output = ChunkedSender(connection)
+            util.copyfileobj(self.data, output, bufSize=self.bufferSize,
+                    callback=self.callback, rateLimit=self.rateLimit)
+            output.close()
+        elif self.size is not None:
+            # Use identity coding
             util.copyfileobj(self.data, connection, bufSize=self.bufferSize,
                 callback=self.callback, rateLimit=self.rateLimit,
                 sizeLimit=self.size)
-            return
+        else:
+            raise RuntimeError("Request must use chunked transfer coding "
+                    "if size is not known.")
 
-        assert self.size is not None
 
-        # keep track of the total amount of data sent so that the
-        # callback passed in to copyfileobj can report progress correctly
-        sent = 0
-        chunk = self.CHUNK_SIZE
-        while self.size - sent:
-            if chunk > self.size - sent:
-                chunk = self.size - sent
+class ChunkedSender(object):
+    """
+    Do HTTP chunked transfer coding by wrapping a socket-like object,
+    intercepting send() calls and sending the correct leading and trailing
+    metadata.
+    """
 
-            # first send the hex-encoded size
-            connection.send('%x\r\n' % chunk)
+    def __init__(self, target):
+        self.target = target
 
-            # then the chunk of data
-            util.copyfileobj(self.data, connection, bufSize=chunk,
-                callback=self.callback, rateLimit=self.rateLimit,
-                sizeLimit=chunk, total=sent)
+    def send(self, data):
+        self.target.send("%x\r\n%s\r\n" % (len(data), data))
 
-            # send \r\n after the chunked data
-            connection.send("\r\n")
-
-            sent += chunk
-        # terminate the chunked encoding
-        connection.send('0\r\n\r\n')
+    def close(self, trailer=''):
+        self.target.send("0\r\n%s\r\n" % (trailer,))
 
 
 def isHTTPData(obj):
