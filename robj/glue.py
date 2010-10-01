@@ -166,8 +166,8 @@ class HTTPClient(object):
         implemented through a see other (303).
         """
 
-        def handle_request(location, cache=True):
-            return self._handle_request(request.method, location,
+        def handle_request(location, method=None, cache=True):
+            return self._handle_request(method, location,
                 xdoc=request.content, parent=parent, cache=cache,
                 redirectCount=redirectCount+1)
 
@@ -189,18 +189,17 @@ class HTTPClient(object):
         # considered safe to cache both the redirect and result.
         if response.status == 301:
             self._redirects[uri] = self._normalize_uri(location)
-            return handle_request(location, cache=True)
+            return handle_request(location, method=request.method, cache=True)
 
         # 302: Found - not cachable
-        # 307: Temporary Redirect - not cachable
-        elif response.status in (302, 307):
-            obj = handle_request(location, cache=False)
+        elif response.status == 302:
+            obj = handle_request(location, method='GET', cache=False)
             obj._uri = uri
             return obj
 
         # 303: See Other - redirect not cacheable, redirected resource cachable.
         elif response.status == 303:
-            return handle_request(location, cache=True)
+            return handle_request(location, method='GET', cache=True)
 
         # 304: Not Modified - resource has not changed since the last request,
         # returned cached instance of location.
@@ -209,9 +208,16 @@ class HTTPClient(object):
             if location in self.cache:
                 return self.cache[location]
             else:
-                obj = handle_request(location, cache=True)
+                obj = handle_request(location, method=request.method,
+                    cache=True)
                 obj._uri = uri
                 return obj
+
+        # 307: Temporary Redirect - not cachable
+        elif response.status == 307:
+            obj = handle_request(location, method=request.method, cache=False)
+            obj._uri = uri
+            return obj
 
         # Everything else must be an error
         else:
