@@ -142,6 +142,13 @@ class ClientTest(testsuite.TestCase):
 
         clearCache()
 
+        obj = self._client.do_GET('/redirects/307')
+        self.failIf('/redirects/307' in self._client._redirects)
+        self.failIf(obj in self._client.cache.values())
+        self.failUnlessEqual(obj._uri, '/redirects/307')
+
+        clearCache()
+
         self.failUnlessRaises(errors.HTTPMaxRedirectReachedError,
             self._client.do_GET, '/redirects/loop')
 
