@@ -15,28 +15,36 @@ Module for httplib customizations.
 """
 
 from robj.lib import util
+from robj.lib import xutil
 
 class HTTPData(object):
     __slots__ = ('data', 'method', 'size', 'headers', 'contentType', 'callback',
-        'chunked', 'bufferSize', 'rateLimit', )
+        'chunked', 'bufferSize', 'rateLimit', 'tag')
 
     CHUNK_SIZE = 262144
     BUFFER_SIZE = 8192
 
     def __init__(self, data=None, method=None, size=None, headers=None,
         contentType=None, callback=None, chunked=None, bufferSize=None,
-        rateLimit=None):
+        rateLimit=None, tag=None):
 
         if headers is None:
             headers = {}
 
         if data is not None:
+            if isinstance(data, dict):
+                obj = xutil.XObjify(data, tag)
+                data = xutil.xobj.toxml(obj, tag)
+
             if hasattr(data, 'read'):
                 if chunked:
                     headers['Transfer-Encoding'] = 'Chunked'
             else:
                 data = data.encode('utf-8')
                 size = len(data)
+
+        if contentType is None:
+            contentType = util.getContentType(data)
 
         self.method = method
         self.data = data
