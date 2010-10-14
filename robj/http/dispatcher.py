@@ -86,13 +86,13 @@ class RequestWorker(Thread):
         try:
             try:
                 conn.request(req)
-            except httplib.BadStatusLine, e:
+            except httplib.BadStatusLine:
                 if req.retry:
                     log.warn('%s: retrying' % self.getName())
                     return req
                 else:
                     raise
-        except Exception, e:
+        except Exception, e:  # pyflakes=ignore
             # Remove the connection object from the local cache since it is
             # now in an error state and thus unusable.
             self._cache.pop(req.key)
