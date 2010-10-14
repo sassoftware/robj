@@ -84,13 +84,19 @@ class RequestWorker(Thread):
 
         # Handle the request.
         try:
-            conn.request(req)
-        except httplib.BadStatusLine:
-            if req.retry:
-                log.warn('%s: retrying' % self.getName())
-                return req
-            else:
-                raise
+            try:
+                conn.request(req)
+            except httplib.BadStatusLine, e:
+                if req.retry:
+                    log.warn('%s: retrying' % self.getName())
+                    return req
+                else:
+                    raise
+        except Exception, e:
+            # Remove the connection object from the local cache since it is
+            # now in an error state and thus unusable.
+            self._cache.pop(req.key)
+            raise
 
         # Wait a tenth of a second before handling the next request.
         time.sleep(0.1)
