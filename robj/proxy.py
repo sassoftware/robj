@@ -17,6 +17,7 @@ Module for implementing rObj classes.
 from threading import RLock
 
 from robj.lib import xutil
+from robj.lib.httputil import HTTPData as _HTTPData
 from robj.errors import ExternalUriError
 from robj.errors import RemoteInstanceOverwriteError
 
@@ -40,6 +41,8 @@ class rObjProxy(object):
     @param parent: Parent rObj instance (optional).
     @type parent: robj.proxy.rObjProxy
     """
+
+    HTTPData = _HTTPData
 
     __slots__ = ('_uri', '_client', '_root', '_parent', '_tag', '_isCollection',
         '_dirty_flag', '_dl', '_childTag', '_local_cache')
