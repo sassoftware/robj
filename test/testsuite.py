@@ -71,7 +71,6 @@ class TestCase(testhelp.TestCase):
     def run(self, results=None):
         if results is not None:
             self._debug_flag = results.debug
-        self._debug_flag = True
         return testhelp.TestCase.run(self, results)
 
     def setUp(self):
