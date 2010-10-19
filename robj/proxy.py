@@ -118,11 +118,11 @@ class rObjProxy(object):
 
     @property
     def elements(self):
-        return self._root._xobj.elements
+        return sorted(self._root._xobj.elements)
 
     @property
     def attributes(self):
-        return self._root._xobj.attributes.keys()
+        return sorted(self._root._xobj.attributes.keys())
 
     def __dir__(self):
         elements = self._root._xobj.elements
@@ -198,6 +198,12 @@ class rObjProxy(object):
                     setattr(self._root, name, value)
             else:
                 self._dirty = True
+
+                if isinstance(value, list) and len(value) == 0:
+                    value = self.__class__(self._uri, self._client,
+                        xutil.XObjify(dict(), name), parent=self)
+
+                self._root._xobj.elements.append(name)
                 setattr(self._root, name, value)
             self._dl.release()
         else:
