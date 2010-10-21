@@ -415,3 +415,76 @@ class CollectionTest(testsuite.TestCase):
 
         # Make sure the collection was not refetched
         self.failUnless(preappend_xobj is postappend_xobj)
+
+    def testComplexCollections(self):
+        xml1 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<results>
+  <resultFiles>
+    <resultFile>
+      <type>msi</type>
+      <size>79360</size>
+    </resultFile>
+  </resultFiles>
+  <productCode>FD38CC28-0E31-45C4-8107-D7694663A2DD</productCode>
+  <upgradeCode>B32B567C-B2E1-4105-86E0-6C332F440E6F</upgradeCode>
+  <package>
+    <components>
+      <component>
+        <uuid>DA94B959-D786-4D58-8428-2991DE6A4FE5</uuid>
+        <path>Program Files\WindowsAppTest</path>
+      </component>
+    </components>
+  </package>
+</results>
+"""
+
+        xml2 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<results>
+  <resultFiles>
+    <resultFile>
+      <type>msi</type>
+      <size>79360</size>
+    </resultFile>
+  </resultFiles>
+  <productCode>FD38CC28-0E31-45C4-8107-D7694663A2DD</productCode>
+  <upgradeCode>B32B567C-B2E1-4105-86E0-6C332F440E6F</upgradeCode>
+  <package>
+    <components>
+      <component>
+        <uuid>DA94B959-D786-4D58-8428-2991DE6A4FE5</uuid>
+        <path>Program Files\WindowsAppTest</path>
+      </component>
+      <component>
+        <uuid>DA94B959-D786-4D58-8428-2991DE6A4FE6</uuid>
+        <path>Program Files\WindowsAppTest2</path>
+      </component>
+    </components>
+  </package>
+</results>
+"""
+
+        doc = xobj.parse(xml1)
+        root = doc.results
+
+        results = rObjProxy('/results', None, root, parent=None)
+
+        self.failIf(results._isCollection)
+        self.failUnless(results.package._isCollection)
+        self.failUnless(hasattr(results.package, 'components'))
+        self.failUnlessEqual(len(results.package), 1)
+        self.failUnless(results.package.components._isCollection)
+        self.failUnlessEqual(len(results.package.components), 1)
+
+        doc2 = xobj.parse(xml2)
+        root2 = doc2.results
+
+        results2 = rObjProxy('/results', None, root2, parent=None)
+
+        self.failIf(results2._isCollection)
+        self.failUnless(results2.package._isCollection)
+        self.failUnless(hasattr(results2.package, 'components'))
+        self.failUnlessEqual(len(results2.package), 1)
+        self.failUnless(results2.package.components._isCollection)
+        self.failUnlessEqual(len(results2.package.components), 2)

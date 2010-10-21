@@ -87,11 +87,10 @@ class rObjProxy(object):
 
             # If child element is defined and is not a list already, make
             # it one.
-            if len(self.elements) == 1 and self._childTag in self.elements:
-                collection = getattr(self._root, self._childTag)
-                if not isinstance(collection, list):
-                    setattr(self._root, self._childTag, [collection, ])
-                self._isCollection = True
+            collection = getattr(self._root, self._childTag)
+            if not isinstance(collection, list):
+                setattr(self._root, self._childTag, [collection, ])
+            self._isCollection = True
 
     def _set_dirty(self, value):
         if self._isChild:
@@ -160,6 +159,12 @@ class rObjProxy(object):
                 self._local_cache[name] = self.__class__(self._uri,
                     self._client, value, parent=self)
             return self._local_cache[name]
+
+        # Unwrap the list that rObj created since it has not way to tell the
+        # difference between a element with a single sub element and a
+        # collection.
+        elif isinstance(value, list) and len(value) == 1:
+            return self._getObj(name, value[0])
 
         return None
 
