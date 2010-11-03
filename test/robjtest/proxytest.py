@@ -488,3 +488,68 @@ class CollectionTest(testsuite.TestCase):
         self.failUnlessEqual(len(results2.package), 1)
         self.failUnless(results2.package.components._isCollection)
         self.failUnlessEqual(len(results2.package.components), 2)
+
+    def testMultiElementCollection(self):
+        """
+        Multi element collections are collections that contain elements of more
+        than one tag name.
+        """
+
+        def getrobj(rootName, xml):
+            doc = xobj.parse(xml)
+            root = getattr(doc, rootName)
+            obj = rObjProxy('/%s' % rootName, None, root, parent=None)
+            return obj
+
+        xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<systems>
+  <event_types>foo</event_types>
+  <system>
+    <name>foo.example.com</name>
+    <type>server</type>
+  </system>
+  <system>
+    <name>bar.example.com</name>
+    <type>desktop</type>
+  </system>
+</systems>
+"""
+
+        xml2 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<systems>
+  <event_types>foo</event_types>
+  <system>
+    <name>foo.example.com</name>
+    <type>server</type>
+  </system>
+</systems>
+"""
+
+        xml3 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<systems>
+  <event_types>foo</event_types>
+</systems>
+"""
+
+        systems1 = getrobj('systems', xml)
+        self.failUnless(systems1._isCollection)
+        self.failUnlessEqual(len(systems1), 2)
+        self.failUnless(hasattr(systems1, 'event_types'))
+
+        systems2 = getrobj('systems', xml2)
+        self.failUnless(systems2._isCollection)
+        self.failUnlessEqual(len(systems2), 1)
+        self.failUnless(hasattr(systems2, 'event_types'))
+
+        systems3 = getrobj('systems', xml3)
+        systems3.append(dict(name='mysystem', type='server'), post=False,
+            tag='system')
+
+        self.failUnless(systems3._isCollection)
+        self.failUnlessEqual(systems3._childTag, 'system')
+        self.failUnlessEqual(len(systems3), 1)
+
+        self.failUnless(hasattr(systems3, 'event_types'))

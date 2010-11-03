@@ -78,19 +78,34 @@ class rObjProxy(object):
         # 1. Top level tag name ends in 's' and number of elements is 0 or 1 and
         #    if 1 sub element is same as top level tag without the 's'.
         # 2. Number of elements is 1.
+        # 3. Number of reoccuring elements is 1. In xobj this would mean that
+        #    the attribute is a list.
+        # 4. No reoccuring elements, but there is an element that matches the
+        #    same pattern as #1.
         ##
 
         if self._tag.endswith('s') and len(self.elements) == 0:
             self._childTag = self._tag[:-1]
         elif len(self.elements) == 1:
             self._childTag = self.elements[0]
+            self._isCollection = True
+        else:
+            lists = [ x for x in self.elements
+                if isinstance(getattr(self._root, x, None), list) ]
+            if len(lists) == 1:
+                self._childTag = lists[0]
+                self._isCollection = True
+            elif self._tag[:-1] in self.elements:
+                self._childTag = self._tag[:-1]
 
-            # If child element is defined and is not a list already, make
-            # it one.
-            collection = getattr(self._root, self._childTag)
+
+        # If child element is defined and is not a list already, make
+        # it one.
+        if self._childTag:
+            collection = getattr(self._root, self._childTag, [])
             if not isinstance(collection, list):
                 setattr(self._root, self._childTag, [collection, ])
-            self._isCollection = True
+                self._isCollection = True
 
     def _set_dirty(self, value):
         if self._isChild:
@@ -273,7 +288,7 @@ class rObjProxy(object):
         self._dl.release()
         return l
 
-    def append(self, value, post=True):
+    def append(self, value, post=True, tag=None):
         """
         Append a value to a collection.
         @param value: Object to append to the collection.
@@ -282,7 +297,14 @@ class rObjProxy(object):
                      that it is appended. If this is set to False the collection
                      must be later persisted. (default: True)
         @type post: boolean
+        @param tag: Optional tag to use as the xml element tag for the object
+                    being appended. This has the side effect of changing the
+                    default childTag for the collection.
+        @type tag: str
         """
+
+        if tag:
+            self._childTag = tag
 
         # Convert dictionaries to XObj instances.
         if isinstance(value, dict):
