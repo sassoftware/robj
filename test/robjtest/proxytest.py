@@ -415,3 +415,141 @@ class CollectionTest(testsuite.TestCase):
 
         # Make sure the collection was not refetched
         self.failUnless(preappend_xobj is postappend_xobj)
+
+    def testComplexCollections(self):
+        xml1 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<results>
+  <resultFiles>
+    <resultFile>
+      <type>msi</type>
+      <size>79360</size>
+    </resultFile>
+  </resultFiles>
+  <productCode>FD38CC28-0E31-45C4-8107-D7694663A2DD</productCode>
+  <upgradeCode>B32B567C-B2E1-4105-86E0-6C332F440E6F</upgradeCode>
+  <package>
+    <components>
+      <component>
+        <uuid>DA94B959-D786-4D58-8428-2991DE6A4FE5</uuid>
+        <path>Program Files\WindowsAppTest</path>
+      </component>
+    </components>
+  </package>
+</results>
+"""
+
+        xml2 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<results>
+  <resultFiles>
+    <resultFile>
+      <type>msi</type>
+      <size>79360</size>
+    </resultFile>
+  </resultFiles>
+  <productCode>FD38CC28-0E31-45C4-8107-D7694663A2DD</productCode>
+  <upgradeCode>B32B567C-B2E1-4105-86E0-6C332F440E6F</upgradeCode>
+  <package>
+    <components>
+      <component>
+        <uuid>DA94B959-D786-4D58-8428-2991DE6A4FE5</uuid>
+        <path>Program Files\WindowsAppTest</path>
+      </component>
+      <component>
+        <uuid>DA94B959-D786-4D58-8428-2991DE6A4FE6</uuid>
+        <path>Program Files\WindowsAppTest2</path>
+      </component>
+    </components>
+  </package>
+</results>
+"""
+
+        doc = xobj.parse(xml1)
+        root = doc.results
+
+        results = rObjProxy('/results', None, root, parent=None)
+
+        self.failIf(results._isCollection)
+        self.failUnless(results.package._isCollection)
+        self.failUnless(hasattr(results.package, 'components'))
+        self.failUnlessEqual(len(results.package), 1)
+        self.failUnless(results.package.components._isCollection)
+        self.failUnlessEqual(len(results.package.components), 1)
+
+        doc2 = xobj.parse(xml2)
+        root2 = doc2.results
+
+        results2 = rObjProxy('/results', None, root2, parent=None)
+
+        self.failIf(results2._isCollection)
+        self.failUnless(results2.package._isCollection)
+        self.failUnless(hasattr(results2.package, 'components'))
+        self.failUnlessEqual(len(results2.package), 1)
+        self.failUnless(results2.package.components._isCollection)
+        self.failUnlessEqual(len(results2.package.components), 2)
+
+    def testMultiElementCollection(self):
+        """
+        Multi element collections are collections that contain elements of more
+        than one tag name.
+        """
+
+        def getrobj(rootName, xml):
+            doc = xobj.parse(xml)
+            root = getattr(doc, rootName)
+            obj = rObjProxy('/%s' % rootName, None, root, parent=None)
+            return obj
+
+        xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<systems>
+  <event_types>foo</event_types>
+  <system>
+    <name>foo.example.com</name>
+    <type>server</type>
+  </system>
+  <system>
+    <name>bar.example.com</name>
+    <type>desktop</type>
+  </system>
+</systems>
+"""
+
+        xml2 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<systems>
+  <event_types>foo</event_types>
+  <system>
+    <name>foo.example.com</name>
+    <type>server</type>
+  </system>
+</systems>
+"""
+
+        xml3 = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<systems>
+  <event_types>foo</event_types>
+</systems>
+"""
+
+        systems1 = getrobj('systems', xml)
+        self.failUnless(systems1._isCollection)
+        self.failUnlessEqual(len(systems1), 2)
+        self.failUnless(hasattr(systems1, 'event_types'))
+
+        systems2 = getrobj('systems', xml2)
+        self.failUnless(systems2._isCollection)
+        self.failUnlessEqual(len(systems2), 1)
+        self.failUnless(hasattr(systems2, 'event_types'))
+
+        systems3 = getrobj('systems', xml3)
+        systems3.append(dict(name='mysystem', type='server'), post=False,
+            tag='system')
+
+        self.failUnless(systems3._isCollection)
+        self.failUnlessEqual(systems3._childTag, 'system')
+        self.failUnlessEqual(len(systems3), 1)
+
+        self.failUnless(hasattr(systems3, 'event_types'))
