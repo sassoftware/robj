@@ -20,6 +20,8 @@ class RobjTest(TestPackageRecipe):
                      'lxml:python', 'xobj:python', 'testutils:runtime',
                      'testutils:python',]
 
+    Flags.test = False
+
     # Location of testsuite.py used by the superclass
     testDir = './test'
 
@@ -27,7 +29,8 @@ class RobjTest(TestPackageRecipe):
         'robj': '%(libdir)s/python2.4/site-packages/robj',
       }
 
-    def setup(r):
+    def setupSource(r):
         r.addMercurialSnapshot()
-        r.run_tests()
 
+    def install(r):
+        r.Install('test', '%(libdir)s/python%(pyver)s/site-packages/robj_test')
