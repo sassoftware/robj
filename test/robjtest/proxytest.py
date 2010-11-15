@@ -553,3 +553,32 @@ class CollectionTest(testsuite.TestCase):
         self.failUnlessEqual(len(systems3), 1)
 
         self.failUnless(hasattr(systems3, 'event_types'))
+
+    def testLocalCacheOfCollections(self):
+        xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<results>
+  <package>
+    <components>
+      <component>
+        <uuid>DA94B959-D786-4D58-8428-2991DE6A4FE5</uuid>
+        <path>Program Files\WindowsAppTest</path>
+      </component>
+      <component>
+        <uuid>DA94B959-D786-4D58-8428-2991DE6A4FE6</uuid>
+        <path>Program Files\WindowsAppTest2</path>
+      </component>
+    </components>
+  </package>
+</results>
+"""
+
+        doc = xobj.parse(xml)
+        root = doc.results
+
+        results = rObjProxy('/results', None, root, parent=None)
+
+        self.failUnlessEqual(results.package.components[0].uuid,
+            'DA94B959-D786-4D58-8428-2991DE6A4FE5')
+        self.failUnlessEqual(results.package.components[1].uuid,
+            'DA94B959-D786-4D58-8428-2991DE6A4FE6')

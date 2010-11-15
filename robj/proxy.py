@@ -60,6 +60,10 @@ class rObjProxy(object):
         self._dl = RLock()
         self._tag = self._root._xobj.tag
 
+        if self._tag is None:
+            raise RuntimeError, ('No XML tag found for this object, please '
+                'make sure you are using the latest verison of xobj.')
+
         # Colleciton related attributes
         self._childTag = None
         self._isCollection = False
@@ -170,10 +174,11 @@ class rObjProxy(object):
 
         # Wrap anything that has elements in an rObj.
         elif hasattr(value, '_xobj') and value._xobj.elements:
-            if name not in self._local_cache:
-                self._local_cache[name] = self.__class__(self._uri,
+            valueId = id(value)
+            if valueId not in self._local_cache:
+                self._local_cache[valueId] = self.__class__(self._uri,
                     self._client, value, parent=self)
-            return self._local_cache[name]
+            return self._local_cache[valueId]
 
         # Unwrap the list that rObj created since it has not way to tell the
         # difference between a element with a single sub element and a
