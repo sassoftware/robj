@@ -19,6 +19,8 @@ import urllib
 import urlparse
 
 from robj.lib import util
+from robj.lib.httputil import HTTPHeaders
+
 from robj.http.request import Request
 from robj.http.dispatcher import RequestDispatcher
 
@@ -29,7 +31,7 @@ class Client(object):
                     This may contain user information and must be http or https.
     @type baseUri: str
     @param headers: Any headers that should be included in all requets.
-    @type headers: dict
+    @type headers: dict like object
     @param maxClients: The maximum number of workers that will be created to
                        handle requets. Works are created as needed, rather than
                        being preallocated. (default: 1)
@@ -44,7 +46,7 @@ class Client(object):
     def __init__(self, baseUri, headers=None, maxClients=None,
         maxConnections=None):
 
-        self._headers = headers or dict()
+        self._headers = headers or HTTPHeaders()
 
         self._user = None
         self._passwd = None
@@ -73,6 +75,15 @@ class Client(object):
     def path(self):
         return self._path.rstrip('/')
 
+    def _getHost(self):
+        if ':' in self._hostport:
+            host, port = self._hostport.split(':')
+            if ((self._scheme.lower() == 'http' and port == 80) or
+                (self._scheme.lower() == 'https' and port == 443)):
+                return host
+
+        return self._hostport
+
     def _getHeaders(self, headers=None):
         hdrs = self._headers.copy()
         hdrs.update(headers or {})
@@ -85,8 +96,9 @@ class Client(object):
         uri = uri.lstrip('/')
         path = '/'.join((self._path, uri))
 
-        headers = self._getHeaders(headers={
+        headers = self._getHeaders({
             'Content-Type': util.getContentType(content),
+            'Host': self._getHost().encode('idna'),
         })
 
         # If the content object defines a iterheaders method, as
@@ -95,10 +107,10 @@ class Client(object):
         # type if you want something other than application/octet-stream.
         if hasattr(content, 'iterheaders'):
             for key, val in content.iterheaders():
-                headers[key] = val
+                headers.replace(key, val)
 
         req = Request(method, path, self._scheme, self._hostport,
-            content=content, headers=self._getHeaders(headers=headers))
+            content=content, headers=headers)
 
         self._dispatcher.request(req)
 
