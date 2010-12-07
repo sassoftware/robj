@@ -15,6 +15,7 @@ Generic HTTP connection handling.
 """
 
 import logging
+import time
 
 from robj.lib import fixedhttplib as httplib
 
@@ -33,11 +34,14 @@ class Connection(object):
     _HTTPConnection = httplib.HTTPConnection
     _HTTPSConnection = httplib.HTTPSConnection
 
+    _timeout = 15
+
     def __init__(self, scheme, hostport):
         self._scheme = scheme
         self._hostport = hostport
 
         self._conn = None
+        self._last_used = 0
 
     def __hash__(self):
         return hash(self.key)
@@ -86,8 +90,12 @@ class Connection(object):
         if hasattr(content, 'seek'):
             content.seek(0)
 
+        # Check if the connection is stale before making the request in case we
+        # are in single-threaded mode and aren't actively monitored.
+        self.check()
         self._connection.request(method, path, body=content, headers=headers)
         response = self._connection.getresponse()
+        self._last_used = time.time()
         return response
 
     def request(self, req):
@@ -99,3 +107,17 @@ class Connection(object):
 
         req.response = self._request(req.method, req.path, content=req.content,
             headers=req.headers)
+
+    def close(self):
+        """Close the connection immediately."""
+        if self._conn:
+            self._conn.close()
+            self._conn = None
+
+    def check(self):
+        """Close the connection if it has not been recently used."""
+        if self._conn and time.time() - self._last_used > self._timeout:
+            clog.debug('closing idle connection to %s://%s', self._scheme,
+                    self._hostport)
+            self._conn.close()
+            self._conn = None
