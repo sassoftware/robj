@@ -29,7 +29,7 @@ class HTTPData(object):
         rateLimit=None, tag=None):
 
         if headers is None:
-            headers = {}
+            headers = HTTPHeaders()
 
         if data is not None:
             if isinstance(data, dict):
@@ -57,8 +57,12 @@ class HTTPData(object):
         self.rateLimit = rateLimit
 
     def iterheaders(self):
-        for k, v in sorted(self.headers.iteritems()):
-            yield k, str(v)
+        if isinstance(self.headers, HTTPHeaders):
+            for k, v in self.headers.iteritems():
+                yield k, v
+        else:
+            for k, v in sorted(self.headers.iteritems()):
+                yield k, str(v)
         if self.size is not None:
             yield 'Content-Length', str(self.size)
         if self.contentType is not None:
@@ -103,6 +107,67 @@ class ChunkedSender(object):
 
     def close(self, trailer=''):
         self.target.send("0\r\n%s\r\n" % (trailer,))
+
+
+class HTTPHeaders(object):
+    """
+    Case insensitive, case preserving, multi key dictionary like store for
+    headers.
+    """
+
+    __slots__ = ('_headers', )
+
+    class __Empty(object): pass
+
+    def __init__(self, headers=None):
+        if headers:
+            for key, value in headers.iteritems():
+                self[key] = value
+
+        self._headers = {}
+
+    def __iter__(self):
+        return self._headers.__iter__()
+
+    def iteritems(self):
+        for key, hlst in sorted(self._headers.iteritems()):
+            for header in hlst:
+                yield header
+
+    def __contains__(self, key):
+        return key.lower() in self._headers
+
+    def __setitem__(self, key, value):
+        self.append(key, value, replace=False)
+
+    def __getitem__(self, key):
+        return self._headers.get(key.lower(), [])
+
+    def append(self, name, value, replace=False):
+        if replace:
+            self.remove(name)
+        self._headers.setdefault(name.lower(), []).append((name, value))
+
+    def remove(self, name):
+        self._headers.pop(name.lower(), None)
+
+    def replace(self, name, value):
+        self.append(name, value, replace=True)
+
+    def copy(self):
+        cls = self.__class__
+        headers = self._headers.copy()
+        return cls(headers=headers)
+
+    def update(self, other):
+        for key, value in other.iteritems():
+            self.append(key, value)
+
+    def get(self, key, default=__Empty):
+        value = self._headers.get(key.lower(), default)
+        if value != default and isinstance(value, list) and len(value) == 1:
+            return value[0]
+        return value
 
 
 def isHTTPData(obj):
