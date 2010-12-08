@@ -3,7 +3,7 @@ INTRODUCTION
 This is an initial offering of the rObj interface.  It should not be
 considered a stable interface and may not be backwards compatible
 with future releases.
-
+ 
 The rObj project is a dynamic REST client library.
 
 It is not required to provide an XML schema to use rObj.  Custom
