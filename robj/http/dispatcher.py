@@ -17,7 +17,7 @@ Classes for manging pool of http clients.
 import time
 import logging
 import httplib
-from Queue import Queue
+import Queue
 from threading import Thread
 
 from robj.http.connection import Connection
@@ -52,6 +52,11 @@ class RequestWorker(Thread):
             self._cache[req.key] = conn
         return conn
 
+    def _cleanup(self):
+        """Close idle keepalive sessions."""
+        for conn in self._cache.values():
+            conn.check()
+
     def run(self):
         """
         Process client requests forever.
@@ -59,7 +64,11 @@ class RequestWorker(Thread):
 
         while True:
             # Get the next available request.
-            req = self._inq.get()
+            try:
+                req = self._inq.get(timeout=5)
+            except Queue.Empty:
+                self._cleanup()
+                continue
             self._busy = True
             req = self.handleRequest(req)
             if req is not None:
@@ -127,7 +136,7 @@ class RequestDispatcher(object):
         self._maxClients = maxClients
         self._maxConnections = maxConnections
 
-        self._reqs = Queue()
+        self._reqs = Queue.Queue()
         self._workers = []
 
     def _createWorker(self):
