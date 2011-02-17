@@ -180,6 +180,11 @@ class rObjProxy(object):
                     self._client, value, parent=self)
             return self._local_cache[valueId]
 
+        # Return an already cached instance if it got there through some
+        # other means.
+        elif hasattr(value, '_xobj') and id(value) in self._local_cache:
+            return self._local_cache[id(value)]
+
         # Unwrap the list that rObj created since it has not way to tell the
         # difference between a element with a single sub element and a
         # collection.
@@ -194,6 +199,11 @@ class rObjProxy(object):
         elif hasattr(obj, 'id'):
             raise RemoteInstanceOverwriteError(
                 name=name, uri=self._uri, id=obj.id)
+        elif value == [] and hasattr(obj, '_xobj'):
+            valueId = id(obj)
+            if valueId not in self._local_cache:
+                self._local_cache[valueId] = self.__class__(self._uri,
+                    self._client, obj, parent=self)
         else:
             return False
         return True
