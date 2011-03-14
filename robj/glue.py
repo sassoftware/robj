@@ -82,6 +82,10 @@ class HTTPClient(object):
             maxRedirects = 10
         self._maxRedirects = maxRedirects
 
+        if not isinstance(headers, (dict, httputil.HTTPHeaders)):
+            headers = httputil.HTTPHeaders()
+        headers['Accept'] = 'text/xml'
+
         self._client = _HTTPClient(baseUri, headers=headers,
             maxClients=maxClients, maxConnections=maxConnections)
 
