@@ -120,11 +120,11 @@ class HTTPHeaders(object):
     class __Empty(object): pass
 
     def __init__(self, headers=None):
+        self._headers = {}
+
         if headers:
             for key, value in headers.iteritems():
                 self[key] = value
-
-        self._headers = {}
 
     def __iter__(self):
         return self._headers.__iter__()
@@ -156,8 +156,7 @@ class HTTPHeaders(object):
 
     def copy(self):
         cls = self.__class__
-        headers = self._headers.copy()
-        return cls(headers=headers)
+        return cls(headers=self)
 
     def update(self, other):
         for key, value in other.iteritems():
