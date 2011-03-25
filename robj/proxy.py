@@ -316,6 +316,7 @@ class rObjProxy(object):
                     being appended. This has the side effect of changing the
                     default childTag for the collection.
         @type tag: str
+        @return: If post is true (default), return the newly created resource.
         """
 
         if tag:
@@ -328,6 +329,7 @@ class rObjProxy(object):
         if post:
             obj = self._client.do_POST(self._uri, value)
             self._collection.append(obj._root)
+            return obj
         else:
             self._collection.append(value)
             self._dirty_flag = True
