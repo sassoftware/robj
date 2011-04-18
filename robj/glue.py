@@ -23,6 +23,7 @@ from robj import errors
 from robj.lib import util
 from robj.lib import httputil
 from robj.proxy import rObjProxy
+from robj.collections import PagedCollection
 from robj.http import HTTPClient as _HTTPClient
 
 from robj.errors import HTTPDeleteError
@@ -84,7 +85,7 @@ class HTTPClient(object):
 
         if not isinstance(headers, (dict, httputil.HTTPHeaders)):
             headers = httputil.HTTPHeaders()
-        headers['Accept'] = 'text/xml'
+        headers['Accept'] = 'text/xml, text/application'
 
         self._client = _HTTPClient(baseUri, headers=headers,
             maxClients=maxClients, maxConnections=maxConnections)
@@ -413,6 +414,22 @@ class InstanceCache(dict):
             robj = rObjProxy(uri, client, root, parent=parent)
             if cache:
                 self[uri] = robj
+
+        if PagedCollection.isPaged(robj):
+            curi = client._normalize_uri(robj.full_collection)
+
+
+            # Figure out where this requiest originated:
+            # 1. As a next_page/previous_page request from an existing
+            #    collection.
+            # 2. From another resource.
+            if curi not in self:
+                robj = PagedCollection(robj)
+                if cache:
+                    self[curi] = robj
+
+            elif not PagedCollection.isSiblingNode(robj, parent):
+                robj = self[curi]
 
         self._write_lock.release()
         return robj
