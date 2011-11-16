@@ -582,3 +582,26 @@ class CollectionTest(testsuite.TestCase):
             'DA94B959-D786-4D58-8428-2991DE6A4FE5')
         self.failUnlessEqual(results.package.components[1].uuid,
             'DA94B959-D786-4D58-8428-2991DE6A4FE6')
+
+    def testEmptyList(self):
+        xml = """\
+<?xml version='1.0' encoding='UTF-8'?>
+<job>
+  <package>
+    <version />
+    <components />
+  </package>
+  <foo>bar</foo>
+</job>
+"""
+
+        doc = xobj.parse(xml)
+        root = doc.job
+
+        job = rObjProxy('/job', None, root, parent=None)
+
+        self.failUnless(isinstance(job.package.components, xobj.XObj))
+
+        job.package.components = []
+
+        self.failUnless(isinstance(job.package.components, rObjProxy))
