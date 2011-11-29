@@ -193,7 +193,7 @@ class HTTPClient(object):
 
         # 302: Found - not cachable
         elif response.status == 302:
-            obj = handle_request(location, method='GET', cache=False)
+            obj = handle_request(location, method='GET', cache=True)
             obj._uri = uri
             return obj
 
