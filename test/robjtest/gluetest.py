@@ -123,7 +123,7 @@ class ClientTest(testsuite.TestCase):
 
         obj = self._client.do_GET('/redirects/302')
         self.failIf('/redirects/302' in self._client._redirects)
-        self.failIf(obj in self._client.cache.values())
+        self.failUnless(obj in self._client.cache.values())
         self.failUnlessEqual(obj._uri, '/redirects/302')
 
         clearCache()
