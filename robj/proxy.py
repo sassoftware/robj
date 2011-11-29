@@ -159,17 +159,22 @@ class rObjProxy(object):
             return bool(self._root)
 
     def _getObj(self, name, value):
-        # Wrap this instance with an rObj.
-        if hasattr(value, 'id'):
+        # If this is a summary view of the resource, don't fetch the entire
+        # resource, just store the summary view for now. Tis will require a
+        # refresh from the user to pull the entire resource. Not sure if this
+        # is the right thing, but let's try it for now.
+        if (hasattr(value, 'id') and
+            hasattr(value, '_xobj') and len(value._xobj.elements) > 0):
             return self._client.cache(self._client, value.id, value,
                 parent=self)
 
-        # Get the instance pointed to by the href.
-        elif hasattr(value, 'href'):
+        # Get the instance pointed to by the href/id.
+        if hasattr(value, 'id') or hasattr(value, 'href'):
+            valueId = hasattr(value, 'id') and value.id or value.href
             try:
-                obj = self._client.do_GET(value.href, parent=self)
+                obj = self._client.do_GET(valueId, parent=self)
             except ExternalUriError:
-                return value.href
+                return valueId
             return obj
 
         # Wrap anything that has elements in an rObj.
