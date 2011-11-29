@@ -311,7 +311,7 @@ class HTTPClient(object):
         # If the top level object has an 'id' attribute, use that as its URI.
         # This is here to handle appending to collections, where the resource
         # you get back is the new instance, not the collection itself.
-        if 'id' in root._xobj.attributes:
+        if method != 'GET' and 'id' in root._xobj.attributes:
             uri = self._normalize_uri(root.id)
 
         # Cache response and return rObjProxy instance.
