@@ -10,7 +10,7 @@
 # or fitness for a particular purpose. See the MIT License for full details.
 #
 
-VERSION=0.1
+VERSION=0.2
 
 export prefix = /usr
 export lib = $(shell arch | sed -r '/x86_64|ppc64|s390x|sparc64/{s/.*/lib64/;q};s/.*/lib/')
