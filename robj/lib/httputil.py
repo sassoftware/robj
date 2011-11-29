@@ -120,11 +120,11 @@ class HTTPHeaders(object):
     class __Empty(object): pass
 
     def __init__(self, headers=None):
+        self._headers = {}
+
         if headers:
             for key, value in headers.iteritems():
                 self[key] = value
-
-        self._headers = {}
 
     def __iter__(self):
         return self._headers.__iter__()
@@ -143,6 +143,9 @@ class HTTPHeaders(object):
     def __getitem__(self, key):
         return self._headers.get(key.lower(), [])
 
+    def __repr__(self):
+        return repr([ x for x in self.iteritems() ])
+
     def append(self, name, value, replace=False):
         if replace:
             self.remove(name)
@@ -156,15 +159,14 @@ class HTTPHeaders(object):
 
     def copy(self):
         cls = self.__class__
-        headers = self._headers.copy()
-        return cls(headers=headers)
+        return cls(headers=self)
 
     def update(self, other):
         for key, value in other.iteritems():
             self.append(key, value)
 
     def get(self, key, default=__Empty):
-        value = self._headers.get(key.lower(), default)
+        value = [ x[1] for x in self._headers.get(key.lower(), default) ]
         if value != default and isinstance(value, list) and len(value) == 1:
             return value[0]
         return value
