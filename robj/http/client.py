@@ -52,7 +52,7 @@ class Client(object):
         self._passwd = None
 
         baseUri = baseUri.rstrip('/')
-        self._scheme, loc, self._path, _, _ = urlparse.urlsplit(baseUri)
+        self._scheme, loc, self._path, query, frag = urlparse.urlsplit(baseUri)
 
         userpass, self._hostport = urllib.splituser(loc)
         if userpass:
@@ -67,9 +67,15 @@ class Client(object):
         self._dispatcher = RequestDispatcher(maxClients=maxClients,
             maxConnections=maxConnections)
 
+        self._queryFragment = urlparse.urlunsplit(('', '', '', query, frag))
+
     @property
     def baseURI(self):
         return self._baseUri
+
+    @property
+    def queryFragment(self):
+        return self._queryFragment
 
     @property
     def path(self):

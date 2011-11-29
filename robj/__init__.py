@@ -66,7 +66,10 @@ def rObj(uri, headers=None, maxClients=None, maxConnections=None,
         maxConnections=maxConnections, maxRedirects=maxRedirects)
 
     # Get the root rObj
-    robj = client.do_GET('/')
+    if client.querystring:
+        robj = client.do_GET(client.querystring)
+    else:
+        robj = client.do_GET('/')
 
     return robj
 

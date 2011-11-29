@@ -88,6 +88,10 @@ class HTTPClient(object):
         self.cache = InstanceCache()
         self._redirects = {}
 
+    @property
+    def querystring(self):
+        return self._client.queryFragment
+
     def _normalize_uri(self, uri):
         """
         Make sure uri is based at the baseUri and shorten to be appened on the
