@@ -110,7 +110,7 @@ def isXML(content):
     testStr = '<?xml'
 
     # File case.
-    if isinstance(content, file):
+    if hasattr(content, 'read') and hasattr(content, 'seek'):
         xml = content.read(len(testStr))
         content.seek(0)
         if testStr == xml:

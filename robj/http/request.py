@@ -15,9 +15,37 @@ HTTP Request.
 """
 
 import time
+import logging
 
 from robj.lib import util
 from robj.errors import HTTPResponseTimeout
+
+clog = logging.getLogger('robj.http.traffic')
+
+class FLO(object):
+    """
+    File like object that logs the output of any write operations.
+    """
+
+    def __init__(self, f):
+        self.f = f
+
+    def fileno(self):
+        return self.f.fileno()
+
+    def read(self, size=-1):
+        return self.f.read(size)
+
+    def write(self, content):
+        self.f.write(content)
+        clog.debug(content)
+
+    def seek(self, dist, start=0):
+        self.f.seek(dist, start)
+
+    def close(self):
+        self.f.close()
+
 
 class Response(object):
     """
@@ -28,7 +56,7 @@ class Response(object):
         self.status = resp.status
         self.reason = resp.reason
         self.length = resp.length
-        self.content = util.mktemp()
+        self.content = FLO(util.mktemp())
         self.headers = resp.getheaders()
 
         util.copyfileobj(resp, self.content)
