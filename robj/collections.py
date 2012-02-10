@@ -219,6 +219,9 @@ class PagedCollection(object):
         if required_attrs.difference(attrs):
             return False
 
+        if not getattr(node, 'full_collection', None):
+            return False
+
         return True
 
     @classmethod
