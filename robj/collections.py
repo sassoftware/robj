@@ -144,13 +144,13 @@ class Page(object):
 
 
 class PagedCollection(object):
-    __slots__ = ('_pages', '_full_id', '_new_items', )
+    __slots__ = ('_pages', '_full_id', '_new_items', '_uri')
 
     def __init__(self, node):
         self._pages = Pages()
         self._pages.insert(Page(node, self._pages))
 
-        self._full_id = node.full_collection
+        self._full_id = node._client._normalize_uri(node.full_collection)
         self._new_items = []
 
     @property
