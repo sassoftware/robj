@@ -427,7 +427,8 @@ class InstanceCache(dict):
             # 1. As a next_page/previous_page request from an existing
             #    collection.
             # 2. From another resource.
-            if curi not in self:
+            if (curi not in self or
+                not isinstance(self.get(curi), PagedCollection)):
                 robj = PagedCollection(robj)
                 if cache:
                     self[curi] = robj
