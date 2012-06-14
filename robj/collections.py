@@ -197,7 +197,7 @@ class PagedCollection(object):
                 seen.add(i.id)
 
     def append(self, item, post=True, tag=None):
-        node = self._pages.last.append(item, post=post, tag=tag)
+        node = self._pages.last.node.append(item, post=post, tag=tag)
         self._new_items.append(node)
         return node
 
