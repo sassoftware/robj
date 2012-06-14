@@ -14,8 +14,11 @@
 Module for describing RESTful collections.
 """
 
+from robj.proxy import rObjProxy
+
 class Pages(dict):
     def insert(self, page):
+        self.first = page
         self.last = page
         self[page.index] = page
 
@@ -144,7 +147,8 @@ class Page(object):
 
 
 class PagedCollection(object):
-    __slots__ = ('_pages', '_full_id', '_new_items', '_uri')
+    __slots__ = ('_pages', '_full_id', '_new_items', '_uri',
+        '_write_node', )
 
     def __init__(self, node):
         self._pages = Pages()
@@ -153,9 +157,20 @@ class PagedCollection(object):
         self._full_id = node._client._normalize_uri(node.full_collection)
         self._new_items = []
 
+        self._uri = node._uri
+        self._write_node = None
+
     @property
     def id(self):
         return self._full_id
+
+    @property
+    def _node(self):
+        if not self._write_node:
+            self._write_node = rObjProxy(self._uri,
+                self._pages.first.node._client,
+                self._pages.first.node._root)
+        return self._write_node
 
     def __repr__(self):
         return '<robj.PagedCollection(%s)>' % self.id
@@ -197,7 +212,7 @@ class PagedCollection(object):
                 seen.add(i.id)
 
     def append(self, item, post=True, tag=None):
-        node = self._pages.last.node.append(item, post=post, tag=tag)
+        node = self._node.append(item, post=post, tag=tag)
         self._new_items.append(node)
         return node
 
