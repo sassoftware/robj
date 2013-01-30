@@ -15,4 +15,5 @@
 #
 
 
+# pyflakes=ignore
 from robj.http.client import Client as HTTPClient

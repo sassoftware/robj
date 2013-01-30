@@ -15,5 +15,6 @@
 #
 
 
+# pyflakes=ignore-file
 from testserver.server import StartServer
 from testserver.server import ThreadServer
