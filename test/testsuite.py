@@ -26,33 +26,34 @@ from testrunner.testhelp import SkipTestException  # pyflakes=ignore
 
 EXCLUDED_PATHS = ['scripts/.*', 'epdb.py', 'stackutil.py', 'test/.*']
 
-def setup():
-    pathManager.addExecPath('XOBJ_PATH')
-    pathManager.addExecPath('ROBJ_PATH')
+from testrunner import suite
 
-    robjTestPath = pathManager.addExecPath('ROBJ_TEST_PATH')
-    pathManager.addExecPath('TEST_PATH', path=robjTestPath)
-    pathManager.addResourcePath('ROBJ_ARCHIVE_PATH',
-        path=os.path.join(robjTestPath, 'archive'))
 
-def main(argv=None, individual=True):
-    if argv is None:
-        argv = list(sys.argv)
+class Suite(suite.TestSuite):
+    testsuite_module = sys.modules[__name__]
+    topLevelStrip = 0
 
-    from conary.lib import util
-    from conary.lib import coveragehook  # pyflakes=ignore
-    sys.excepthook = util.genExcepthook(True, catchSIGUSR1=False)
+    def setup(self):
+        suite.TestSuite.setup(self)
+        pathManager.addExecPath('XOBJ_PATH')
+        pathManager.addExecPath('ROBJ_PATH')
 
-    from robj.lib import log
-    log.setupLogging()
+        robjTestPath = pathManager.addExecPath('ROBJ_TEST_PATH')
+        pathManager.addExecPath('TEST_PATH', path=robjTestPath)
+        pathManager.addResourcePath('ROBJ_ARCHIVE_PATH',
+            path=os.path.join(robjTestPath, 'archive'))
 
-    handlerClass = testhelp.getHandlerClass(testhelp.ConaryTestSuite,
-            lambda handler, environ: os.getenv('ROBJ_PATH'),
-            lambda handler, environ: EXCLUDED_PATHS)
+    def setupModules(self):
+        pass
 
-    handler = handlerClass(individual=individual)
-    results = handler.main(argv)
-    return results.getExitCode()
+    def getCoverageDirs(self, handler, environ):
+        import robj
+        return [robj]
+
+
+_s = Suite()
+setup = _s.setup
+main = _s.main
 
 
 class TestCase(testhelp.TestCase):
@@ -109,5 +110,4 @@ class TestCase(testhelp.TestCase):
 
 
 if __name__ == '__main__':
-    setup()
-    sys.exit(main(sys.argv, individual=False))
+    _s.run()
