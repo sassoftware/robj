@@ -116,7 +116,7 @@ class Products(AbstractModelCollection):
         return doc.product
 
     def create(self, xml, uri):
-        uri = uri.strip('/')
+        uri = uri.rstrip('/')
         model = self.parse(xml)
 
         if getattr(model, 'productid', None):
