@@ -277,7 +277,8 @@ class Product(AbstractController):
             return Response(code=404)
         else:
             self.data.products.delete(idx)
-            return Response(code=200)
+            # products return 204 on successful delete
+            return Response(code=204)
 controllers.register(Product)
 
 

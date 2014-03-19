@@ -107,6 +107,18 @@ class ClientTest(testsuite.TestCase):
         response2 = self._client.do_DELETE(uri)
         self.failUnlessEqual(response2.status, 404)
 
+    def testDELETE204(self):
+        xml = self.getArchiveContents('product1.xml')
+        doc = xobj.parse(xml)
+
+        uri = self._client.do_POST('/products', doc)._root.id
+
+        response = self._client.do_DELETE(uri)
+        self.failUnlessEqual(response.status, 204)
+
+        response2 = self._client.do_DELETE(uri)
+        self.failUnlessEqual(response2.status, 404)
+
     def testRedirect(self):
         def testFail(eclass, path):
             self.failUnlessRaises(eclass, self._client.do_GET, path)
