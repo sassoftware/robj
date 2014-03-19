@@ -285,7 +285,7 @@ class HTTPClient(object):
         # Special case DELETE method.
         if method == 'DELETE':
             # Raise an exception if the resource could not be deleted.
-            if response.status not in (404, 200):
+            if response.status not in (404, 200, 204):
                 raise HTTPDeleteError(uri=uri, status=response.status,
                     reason=response.reason, response=response)
 
