@@ -211,6 +211,10 @@ class PagedCollection(object):
         seen = set()
         for p in self._pages.itervalues():
             for i in p.node:
+                # Handle children that don't have an id to cache by.
+                if not hasattr(i, 'id'):
+                    yield i
+                    continue
                 if i.id in seen:
                     continue
                 yield i
