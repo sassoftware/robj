@@ -15,7 +15,7 @@
 #
 
 
-SUBDIRS = robj test
+SUBDIRS = robj
 
 
 build: default-build
@@ -23,25 +23,6 @@ build: default-build
 install: default-install
 
 clean: default-clean
-
-test: default-test
-
-forcetag:
-	hg tag -f robj-$(VERSION)
-
-tag:
-	hg tag robj-$(VERSION)
-
-
-
-dist: archive
-
-archive-snapshot:
-	hg archive --exclude .hgignore -t tbz2 robj-$$(hg id -i).tar.bz2
-
-archive:
-	hg archive --exclude .hgignore -t tbz2 robj-$(VERSION).tar.bz2
-
 
 export TOPDIR=$(shell pwd)
 include $(TOPDIR)/Make.rules
