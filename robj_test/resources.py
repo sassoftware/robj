@@ -16,13 +16,20 @@
 
 
 import os
-import sys
+from testutils.module_utils import path_for_module
 
-testUtilDir = os.environ.get('TESTUTILS_PATH', '../testutils')
-if os.path.exists(testUtilDir):
-    sys.path.insert(0, testUtilDir)
 
-try:
-    import testrunner
-except ImportError:
-    raise RuntimeError('Could not find testrunner - set TESTUTILS_PATH')
+def get_path(*subpath):
+    return os.path.join(_code_root, *subpath)
+
+
+def get_test_path(*subpath):
+    return os.path.join(_test_root, *subpath)
+
+
+def get_archive(*subpath):
+    return get_test_path('robj_test', 'archive', *subpath)
+
+
+_code_root = path_for_module('robj')
+_test_root = path_for_module('robj_test')

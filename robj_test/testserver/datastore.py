@@ -17,7 +17,7 @@
 
 from xobj import xobj
 
-from testserver import models
+from robj_test.testserver import models
 
 class AttrDict(dict):
     def __getattr__(self, attr):

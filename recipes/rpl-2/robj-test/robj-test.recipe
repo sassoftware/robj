@@ -28,7 +28,7 @@ class RobjTest(TestPackageRecipe):
     Flags.test = False
 
     # Location of testsuite.py used by the superclass
-    testDir = './test'
+    testDir = '.'
 
     codeDirs = {
         'robj': '%(libdir)s/python2.4/site-packages/robj',

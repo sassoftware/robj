@@ -15,17 +15,6 @@
 #
 
 
-default: test
-
-build: default-build testutils-build
-
-install: default-install testutils-install
-
-clean: default-clean testutils-clean
-
-test: default-test testutils-test
-
-
-export TOPDIR=$(shell pwd)/..
-include $(TOPDIR)/Make.rules
-include $(TOPDIR)/Make.defs
+# pyflakes=ignore-file
+from robj_test.testserver.server import StartServer
+from robj_test.testserver.server import ThreadServer

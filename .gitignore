@@ -7,7 +7,7 @@
 *.bz2
 *.sw*
 
-test/.coverage/
-test/.times
-test/.failed
-test/annotate/
+.coverage/
+.times
+.failed
+annotate/

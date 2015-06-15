@@ -1,4 +1,3 @@
-#!/usr/bin/python
 #
 # Copyright (c) SAS Institute Inc.
 #
@@ -15,45 +14,11 @@
 # limitations under the License.
 #
 
-
 import os
-import sys
+from testrunner import testhelp
+from robj_test import resources
 
-import bootstrap  # pyflakes=ignore
-
-from testrunner import pathManager, testhelp
-from testrunner.testhelp import SkipTestException  # pyflakes=ignore
-
-EXCLUDED_PATHS = ['scripts/.*', 'epdb.py', 'stackutil.py', 'test/.*']
-
-from testrunner import suite
-
-
-class Suite(suite.TestSuite):
-    testsuite_module = sys.modules[__name__]
-    topLevelStrip = 0
-
-    def setup(self):
-        suite.TestSuite.setup(self)
-        pathManager.addExecPath('XOBJ_PATH')
-        pathManager.addExecPath('ROBJ_PATH')
-
-        robjTestPath = pathManager.addExecPath('ROBJ_TEST_PATH')
-        pathManager.addExecPath('TEST_PATH', path=robjTestPath)
-        pathManager.addResourcePath('ROBJ_ARCHIVE_PATH',
-            path=os.path.join(robjTestPath, 'archive'))
-
-    def setupModules(self):
-        pass
-
-    def getCoverageDirs(self, handler, environ):
-        import robj
-        return [robj]
-
-
-_s = Suite()
-setup = _s.setup
-main = _s.main
+SkipTestException = testhelp.SkipTestException
 
 
 class TestCase(testhelp.TestCase):
@@ -83,7 +48,7 @@ class TestCase(testhelp.TestCase):
     def setUp(self):
         testhelp.TestCase.setUp(self)
 
-        self.archivePath = pathManager.getPath('ROBJ_ARCHIVE_PATH')
+        self.archivePath = resources.get_archive()
 
         import testserver
         ports = testhelp.findPorts(num=1, closeSockets=True)
@@ -107,7 +72,3 @@ class TestCase(testhelp.TestCase):
         log.setLevel(self._old_log_level)
 
         testhelp.TestCase.tearDown(self)
-
-
-if __name__ == '__main__':
-    _s.run()

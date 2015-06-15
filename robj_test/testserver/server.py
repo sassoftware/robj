@@ -21,9 +21,9 @@ from threading import Thread
 from BaseHTTPServer import HTTPServer
 from BaseHTTPServer import BaseHTTPRequestHandler
 
-from testserver import models
-from testserver.datastore import DataStore
-from testserver.controllers import controllers
+from robj_test.testserver import models
+from .datastore import DataStore
+from .controllers import controllers
 
 log = logging.getLogger('robj.test.testserver')
 

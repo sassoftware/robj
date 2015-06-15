@@ -1,3 +1,4 @@
+#!/usr/bin/python
 #
 # Copyright (c) SAS Institute Inc.
 #
@@ -15,6 +16,23 @@
 #
 
 
-# pyflakes=ignore-file
-from testserver.server import StartServer
-from testserver.server import ThreadServer
+import sys
+from testrunner import suite
+
+
+class Suite(suite.TestSuite):
+    testsuite_module = sys.modules[__name__]
+    topLevelStrip = 0
+
+    def getCoverageDirs(self, handler, environ):
+        import robj
+        return [robj]
+
+
+_s = Suite()
+setup = _s.setup
+main = _s.main
+
+
+if __name__ == '__main__':
+    _s.run()

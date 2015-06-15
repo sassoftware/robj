@@ -16,9 +16,6 @@
 #
 
 
-import testsuite
-testsuite.setup()
-
 from StringIO import StringIO
 
 from xobj import xobj
@@ -27,6 +24,7 @@ from robj.lib import util
 from robj.lib import httputil
 from robj.glue import HTTPClient
 from robj.proxy import rObjProxy
+from robj_test import robjhelp as testsuite
 
 class rObjProxyTest(testsuite.TestCase):
     def setUp(self):

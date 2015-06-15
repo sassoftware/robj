@@ -26,7 +26,7 @@ class RobjTest(TestPackageRecipe):
         ]
 
     # Location of testsuite.py used by the superclass
-    testDir = './test'
+    testDir = '.'
 
     codeDirs = {
         'robj': '%(libdir)s/python%(pyver)s/site-packages/robj',

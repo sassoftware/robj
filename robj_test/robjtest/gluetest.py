@@ -16,14 +16,12 @@
 #
 
 
-import testsuite
-testsuite.setup()
-
 from xobj import xobj
 
 from robj import errors
 from robj.glue import HTTPClient
 from robj.http.request import Response
+from robj_test import robjhelp as testsuite
 
 class ClientTest(testsuite.TestCase):
     def setUp(self):

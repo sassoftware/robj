@@ -16,10 +16,9 @@
 #
 
 
-import testsuite
-testsuite.setup()
-
 from robj.http import HTTPClient
+from robj_test import robjhelp as testsuite
+
 
 class HTTPClientTest(testsuite.TestCase):
     def setUp(self):
