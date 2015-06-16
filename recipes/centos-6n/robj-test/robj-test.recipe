@@ -36,4 +36,4 @@ class RobjTest(TestPackageRecipe):
         r.addMercurialSnapshot()
 
     def install(r):
-        r.Install('test', '%(libdir)s/python%(pyver)s/site-packages/robj_test')
+        r.Install('robj_test', '%(libdir)s/python%(pyver)s/site-packages/robj_test')
