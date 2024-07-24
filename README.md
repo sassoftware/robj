@@ -1,5 +1,8 @@
 INTRODUCTION
 ============
+
+**Archived projet: This project is no longer under active development and was archived on 2024-07-24.**
+
 This is an initial offering of the rObj interface.  It should not be
 considered a stable interface and may not be backwards compatible
 with future releases.
